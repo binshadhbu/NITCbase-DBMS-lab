@@ -1,7 +1,6 @@
 
 
 #include "OpenRelTable.h"
-
 #include <cstring>
 #include <stdlib.h>
 #include <stdio.h>
@@ -80,33 +79,7 @@ OpenRelTable::OpenRelTable()
         AttrCacheTable::attrCache[relId] = head;
     }
 
-    /*
-    RecBuffer relCatBuffer (RELCAT_BLOCK);
-    Attribute relCatRecord [RELCAT_NO_ATTRS];
-
-    HeadInfo relCatHeader;
-    relCatBuffer.getHeader(&relCatHeader);
-
-    int relationIndex = -1;
-    char* relationName = "Students";
-
-    for (int index = 2; index < relCatHeader.numEntries; index++) {
-        relCatBuffer.getRecord(relCatRecord, index);
-
-        if (strcmp(relCatRecord[RELCAT_REL_NAME_INDEX].sVal, 
-                relationName) == 0) { // matching the name of the record we want
-            relationIndex = index;
-        }
-    }
-
-    if (relationIndex == -1) {
-        printf("Relation \"%s\" does not exist!\n", relationName);
-        // return;
-    }
-    else {
-        
-    }
-    */
+    
 }
 
 OpenRelTable::~OpenRelTable()
