@@ -113,7 +113,7 @@ int main(int argc, char *argv[]) {
   // updateAttributeName ("Students", "Class", "Batch");
   // printAttributeCatalog();
   
-	for (int relId = 0; relId <= 1; relId++) {
+	for (int relId = 0; relId <= 2; relId++) {
 		RelCatEntry relCatBuffer;
 		RelCacheTable::getRelCatEntry(relId, &relCatBuffer);
 		printf ("Relation: %s\n", relCatBuffer.relName);
