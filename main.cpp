@@ -55,7 +55,7 @@ void printAttributeCatalog() {
         printf("  %s: %s\n", attrCatRecord[ATTRCAT_ATTR_NAME_INDEX].sVal,
                attrType);
       }
-
+ 
       // once all the slots are traversed, we update the block number
       // of the attrCatBuffer to the next block, and then attrCatHeader
       // is updated to the header of next block
@@ -112,8 +112,7 @@ int main(int argc, char *argv[]) {
   // printAttributeCatalog();
   // updateAttributeName ("Students", "Class", "Batch");
   // printAttributeCatalog();
-  
-	for (int relId = 0; relId <= 1; relId++) {
+	for (int relId = 0; relId <= 2; relId++) {
 		RelCatEntry relCatBuffer;
 		RelCacheTable::getRelCatEntry(relId, &relCatBuffer);
 		printf ("Relation: %s\n", relCatBuffer.relName);
@@ -126,6 +125,5 @@ int main(int argc, char *argv[]) {
 		printf("\n");
 	}
   
-
   return 0;
 }

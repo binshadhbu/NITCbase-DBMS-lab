@@ -12,7 +12,6 @@ int RelCacheTable::getRelCatEntry(int relId, RelCatEntry *relCatBuf) {
   if (relId < 0 || relId >= MAX_OPEN) {
     return E_OUTOFBOUND;
   }
-
   // if there's no entry at the rel-id
   if (relCache[relId] == nullptr) {
     return E_RELNOTOPEN;
@@ -38,11 +37,4 @@ void RelCacheTable::recordToRelCatEntry(union Attribute record[RELCAT_NO_ATTRS],
   relCatEntry->lastBlk = (int)record[RELCAT_LAST_BLOCK_INDEX].nVal;
   relCatEntry->numSlotsPerBlk =
       (int)record[RELCAT_NO_SLOTS_PER_BLOCK_INDEX].nVal;
-
-  /* fill the rest of the relCatEntry struct with the values at
-      RELCAT_NO_RECORDS_INDEX,
-      RELCAT_FIRST_BLOCK_INDEX,
-      RELCAT_LAST_BLOCK_INDEX,
-      RELCAT_NO_SLOTS_PER_BLOCK_INDEX
-  */
 }
