@@ -12,7 +12,6 @@ int RelCacheTable::getRelCatEntry(int relId, RelCatEntry *relCatBuf) {
   if (relId < 0 || relId >= MAX_OPEN) {
     return E_OUTOFBOUND;
   }
-
   // if there's no entry at the rel-id
   if (relCache[relId] == nullptr) {
     return E_RELNOTOPEN;
@@ -38,11 +37,47 @@ void RelCacheTable::recordToRelCatEntry(union Attribute record[RELCAT_NO_ATTRS],
   relCatEntry->lastBlk = (int)record[RELCAT_LAST_BLOCK_INDEX].nVal;
   relCatEntry->numSlotsPerBlk =
       (int)record[RELCAT_NO_SLOTS_PER_BLOCK_INDEX].nVal;
+}
 
-  /* fill the rest of the relCatEntry struct with the values at
-      RELCAT_NO_RECORDS_INDEX,
-      RELCAT_FIRST_BLOCK_INDEX,
-      RELCAT_LAST_BLOCK_INDEX,
-      RELCAT_NO_SLOTS_PER_BLOCK_INDEX
-  */
+int RelCacheTable::getSearchIndex(int relId, RecId *searchIndex) {
+  // check if 0 <= relId < MAX_OPEN and return E_OUTOFBOUND otherwise
+  if (relId < 0 || relId >= MAX_OPEN) {
+    return E_OUTOFBOUND;
+  }
+  // if there's no entry at the rel-id
+  if (relCache[relId] == nullptr) {
+    return E_RELNOTOPEN;
+  }
+
+  // check if relCache[relId] == nullptr and return E_RELNOTOPEN if true
+
+  // copy the searchIndex field of the Relation Cache entry corresponding
+  //   to input relId to the searchIndex variable.
+  *searchIndex = relCache[relId]->searchIndex;
+  return SUCCESS;
+}
+
+int RelCacheTable::setSearchIndex(int relId, RecId *searchIndex) {
+
+  // check if 0 <= relId < MAX_OPEN and return E_OUTOFBOUND otherwise
+
+  // check if relCache[relId] == nullptr and return E_RELNOTOPEN if true
+
+  if (relId < 0 || relId >= MAX_OPEN) {
+    return E_OUTOFBOUND;
+  }
+  // if there's no entry at the rel-id
+  if (relCache[relId] == nullptr) {
+    return E_RELNOTOPEN;
+  }
+  relCache[relId]->searchIndex = *searchIndex;
+  // update the searchIndex value in the relCache for the relId to the
+  // searchIndex argument
+
+  return SUCCESS;
+}
+
+int RelCacheTable::resetSearchIndex(int relId) {
+  relCache[relId]->searchIndex = {-1, -1};
+  // use setSearchIndex to set the search index to {-1, -1}
 }
