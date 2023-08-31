@@ -25,6 +25,7 @@ int AttrCacheTable::getAttrCatEntry(int relId, int attrOffset,
     if (entry->attrCatEntry.offset == attrOffset) {
       // copy entry->attrCatEntry to *attrCatBuf and return SUCCESS;
       *attrCatBuf = entry->attrCatEntry;
+      
     }
   }
 
