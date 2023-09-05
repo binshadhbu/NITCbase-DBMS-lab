@@ -162,19 +162,7 @@ int RecBuffer::getSlotMap(unsigned char *slotMap) {
 }
 
 int compareAttrs(union Attribute attr1, union Attribute attr2, int attrType) {
-
-  double diff;
-  if (attrType == NUMBER) {
-    diff = strcmp(attr1.sVal, attr2.sVal);
-  } else {
-    diff = attr1.nVal - attr2.nVal;
-  }
-
-  if (diff > 0)
-    return 1;
-  if (diff < 0)
-    return -1;
-  if (diff == 0)
-    return 0;
-  return 0;
+  return attrType == NUMBER ? 
+		(attr1.nVal < attr2.nVal ? -1 : (attr1.nVal > attr2.nVal ? 1 : 0)) : 
+		strcmp(attr1.sVal, attr2.sVal) ;
 }
