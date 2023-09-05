@@ -11,7 +11,7 @@ RecId BlockAccess::linearSearch(int relId, char attrName[ATTR_SIZE],
   RelCacheTable::getSearchIndex(relId, &prevRecId);
   // let block and slot denote the record id of the record being currently
   // checked
-  int block, slot = 0;
+  int block=-1, slot = -1;
   // if the current search index record is invalid(i.e. both block and slot =
   // -1)
   if (prevRecId.block == -1 && prevRecId.slot == -1) {
@@ -20,10 +20,10 @@ RecId BlockAccess::linearSearch(int relId, char attrName[ATTR_SIZE],
 
     // get the first record block of the relation from the relation cache
     // (use RelCacheTable::getRelCatEntry() function of Cache Layer)
-    RelCatEntry *RelCatBuf;
-    RelCacheTable::getRelCatEntry(relId, RelCatBuf);
+    RelCatEntry RelCatBuf;
+    RelCacheTable::getRelCatEntry(relId, &RelCatBuf);
     // block = first record block of the relation
-    block = RelCatBuf->firstBlk;
+    block = RelCatBuf.firstBlk;
     slot = 0;
     // slot = 0
   } else {
@@ -41,6 +41,8 @@ RecId BlockAccess::linearSearch(int relId, char attrName[ATTR_SIZE],
      We start from the record id (block, slot) and iterate over the remaining
      records of the relation
   */
+ RelCatEntry relCatBuffer;
+	RelCacheTable::getRelCatEntry(relId, &relCatBuffer);
   while (block != -1) {
     /* create a RecBuffer object for block (use RecBuffer Constructor for
        existing block) */
@@ -54,19 +56,24 @@ RecId BlockAccess::linearSearch(int relId, char attrName[ATTR_SIZE],
     // get header of the block using RecBuffer::getHeader() function
     Buffer.getHeader(&header);
     // get slot map of the block using RecBuffer::getSlotMap() function
-    unsigned char *slotMap =
-        (unsigned char *)malloc(sizeof(unsigned char) * header.numSlots);
+    unsigned char *slotMap =(unsigned char *)malloc(sizeof(unsigned char) * header.numSlots);
     Buffer.getSlotMap(slotMap);
 
     // If slot >= the number of slots per block(i.e. no more slots in this
     // block)
-    if (slot >= header.numSlots) {
-      // update block = right block of block
-      block = header.rblock;
-      slot = 0;
-      // update slot = 0
-      continue; // continue to the beginning of this while loop
-    }
+    // if (slot >= header.numSlots) {
+    //   // update block = right block of block
+    //   block = header.rblock;
+    //   slot = 0;
+    //   // update slot = 0
+    //   continue; // continue to the beginning of this while loop
+    // }
+
+    if (slot >= relCatBuffer.numSlotsPerBlk)
+		{
+			block =header.rblock, slot = 0;
+			continue; // continue to the beginning of this while loop
+		}
 
     // if slot is free skip the loop
     // (i.e. check if slot'th entry in slot map of block contains
@@ -86,13 +93,14 @@ RecId BlockAccess::linearSearch(int relId, char attrName[ATTR_SIZE],
     AttrCatEntry attrCatBuf;
     AttrCacheTable::getAttrCatEntry(relId, attrName, &attrCatBuf);
 
+
     /* use the attribute offset to get the value of the attribute from
        current record */
-    Attribute *record =
-        (Attribute *)malloc(sizeof(Attribute) * header.numAttrs);
+    Attribute *record =(Attribute *)malloc(sizeof(Attribute) * header.numAttrs);
     Buffer.getRecord(record, slot);
+    int attrOffset=attrCatBuf.offset;
 
-    int cmpVal; // will store the difference between the attributes
+    int cmpVal = compareAttrs(record[attrOffset], attrVal,attrCatBuf.attrType); // will store the difference between the attributes
     // set cmpVal using compareAttrs()
     /* Next task is to check whether this record satisfies the given condition.
        It is determined based on the output of previous comparison and
@@ -111,10 +119,12 @@ RecId BlockAccess::linearSearch(int relId, char attrName[ATTR_SIZE],
       the record id of the record that satisfies the given condition
       (use RelCacheTable::setSearchIndex function)
       */
-
+      RecId newIndex;
+      newIndex.block = block;
+      newIndex.slot = slot;
+      RelCacheTable::setSearchIndex(relId, &newIndex);
       return RecId{block, slot};
     }
-
     slot++;
   }
 
