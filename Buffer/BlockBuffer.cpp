@@ -4,7 +4,7 @@
 #include <cstring>
 
 // the declarations for these functions can be found in "BlockBuffer.h"
-
+//  BINSHADDDDDDD INDE CODEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE--------------------------
 BlockBuffer::BlockBuffer(int blockNum)
 {
     // initialise this.blockNum with the argument
@@ -40,10 +40,7 @@ int BlockBuffer::getHeader(HeadInfo *head)
     return SUCCESS;
 }
 
-/*
-Used to get the record at slot `slotNum` into the array `rec`
-NOTE: this function expects the caller to allocate memory for `rec`
-*/
+
 // load the record at slotNum into the argument pointer
 int RecBuffer::getRecord(union Attribute *record, int slotNum)
 {
