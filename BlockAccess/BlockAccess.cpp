@@ -12,12 +12,10 @@ RecId BlockAccess::linearSearch(int relId, char attrName[ATTR_SIZE],
   // let block and slot denote the record id of the record being currently
   // checked
   int block=-1, slot = -1;
-  // if the current search index record is invalid(i.e. both block and slot =
-  // -1)
+  // if the current search index record is invalid(i.e. both block and slot = -1)
   if (prevRecId.block == -1 && prevRecId.slot == -1) {
     // (no hits from previous search; search should start from the
     // first record itself)
-
     // get the first record block of the relation from the relation cache
     // (use RelCacheTable::getRelCatEntry() function of Cache Layer)
     RelCatEntry RelCatBuf;
@@ -58,7 +56,6 @@ RecId BlockAccess::linearSearch(int relId, char attrName[ATTR_SIZE],
     // get slot map of the block using RecBuffer::getSlotMap() function
     unsigned char *slotMap =(unsigned char *)malloc(sizeof(unsigned char) * header.numSlots);
     Buffer.getSlotMap(slotMap);
-
     // If slot >= the number of slots per block(i.e. no more slots in this
     // block)
     // if (slot >= header.numSlots) {
