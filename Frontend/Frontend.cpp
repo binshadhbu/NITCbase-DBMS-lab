@@ -15,12 +15,14 @@ int Frontend::drop_table(char relname[ATTR_SIZE]) {
 }
 
 int Frontend::open_table(char relname[ATTR_SIZE]) {
+  return Schema::openRel(relname);
   // Schema::openRel
   return SUCCESS;
 }
 
 int Frontend::close_table(char relname[ATTR_SIZE]) {
   // Schema::closeRel
+  return Schema::closeRel(relname);
   return SUCCESS;
 }
 
