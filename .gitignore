@@ -2,3 +2,6 @@ build
 nitcbase
 nitcbase-debug
 nitcbase-debug
+.gitignore
+.vscode
+testFile.cpp

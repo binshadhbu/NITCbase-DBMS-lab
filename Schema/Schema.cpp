@@ -18,18 +18,17 @@ int Schema::openRel(char relName[ATTR_SIZE]) {
   return ret;
 }
 
-int Schema::closeRel(char relName[ATTR_SIZE]) {
-  if (strcmp(relName,"RELATIONCAT")==0|| strcmp(relName,"ATTRIBUTECAT")) {
-    return E_NOTPERMITTED;
-  }
+int Schema::closeRel(char relName[ATTR_SIZE])
+{
+	if (strcmp(relName, RELCAT_RELNAME) == 0 || strcmp(relName, ATTRCAT_RELNAME) == 0)
+		return E_NOTPERMITTED;
 
-  // this function returns the rel-id of a relation if it is open or
-  // E_RELNOTOPEN if it is not. we will implement this later.
-  int relId = OpenRelTable::getRelId(relName);
+	// this function returns the rel-id of a relation if it is open or
+	// E_RELNOTOPEN if it is not. we will implement this later.
+	int relId = OpenRelTable::getRelId(relName);
 
-  if (relId==E_RELNOTOPEN){
-    return E_RELNOTOPEN;
-  }
+	if (relId == E_RELNOTOPEN)
+		return E_RELNOTOPEN;
 
-  return OpenRelTable::closeRel(relId);
+	return OpenRelTable::closeRel(relId);
 }
