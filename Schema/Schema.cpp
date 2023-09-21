@@ -32,3 +32,5 @@ int Schema::closeRel(char relName[ATTR_SIZE])
 
 	return OpenRelTable::closeRel(relId);
 }
+
+  
