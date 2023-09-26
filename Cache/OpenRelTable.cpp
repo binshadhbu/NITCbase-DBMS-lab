@@ -100,7 +100,7 @@ int OpenRelTable::getRelId(char relName[ATTR_SIZE]) {
 
 int OpenRelTable::getFreeOpenRelTableEntry() {
 
-  for (int i = 0; i < MAX_OPEN; i++) {
+  for (int i = 2; i < MAX_OPEN; i++) {
     if (tableMetaInfo[i].free) {
       return i;
     }
