@@ -156,7 +156,7 @@ int RecBuffer::setRecord(union Attribute *rec, int slotNum) {
     // update dirty bit using setDirtyBit()
     int ret=StaticBuffer::setDirtyBit(this->blockNum);
     if(ret!=SUCCESS){
-      std::cout<<"something srong with the setDirty function";
+      std::cout<<"something wrong with the setDirty function";
     }
     /* (the above function call should not fail since the block is already
        in buffer and the blockNum is valid. If the call does fail, there
