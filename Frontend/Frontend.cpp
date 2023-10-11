@@ -51,6 +51,7 @@ int Frontend::drop_index(char relname[ATTR_SIZE], char attrname[ATTR_SIZE]) {
 
 int Frontend::insert_into_table_values(char relname[ATTR_SIZE], int attr_count, char attr_values[][ATTR_SIZE]) {
   // Algebra::insert
+  return Algebra::insert(relname, attr_count, attr_values);
   return SUCCESS;
 }
 

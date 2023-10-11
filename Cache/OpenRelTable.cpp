@@ -136,7 +136,8 @@ int OpenRelTable::openRel(char relName[ATTR_SIZE])
     //* before calling linearSearch().
 
   	// relcatRecId stores the rec-id of the relation `relName` in the Relation Catalog.
-	Attribute attrVal; strcpy(attrVal.sVal, relName);
+	Attribute attrVal; 
+  strcpy(attrVal.sVal, relName);
 	RelCacheTable::resetSearchIndex(RELCAT_RELID);
 
   	RecId relcatRecId = BlockAccess::linearSearch(RELCAT_RELID, RELCAT_ATTR_RELNAME, attrVal, EQ);
@@ -226,6 +227,22 @@ int OpenRelTable::closeRel(int relId) {
   if (AttrCacheTable::attrCache[relId] == nullptr) {
     return E_RELNOTOPEN;
   }
+
+  if (RelCacheTable::relCache[relId]->dirty)
+  {
+
+    /* Get the Relation Catalog entry from RelCacheTable::relCache
+    Then convert it to a record using RelCacheTable::relCatEntryToRecord(). */
+    Attribute attrCatRecord[ATTRCAT_NO_ATTRS];
+    RelCacheTable::relCatEntryToRecord(&(RelCacheTable::relCache[relId]->relCatEntry),attrCatRecord);
+    
+    // declaring an object of RecBuffer class to write back to the buffer
+    RecBuffer relCatBlock(RelCacheTable::relCache[relId]->recId.block);
+    relCatBlock.setRecord(attrCatRecord,RelCacheTable::relCache[relId]->recId.slot);
+    // Write back to the buffer using relCatBlock.setRecord() with recId.slot
+  }
+
+
 
   free(RelCacheTable::relCache[relId]);
   AttrCacheEntry *head = AttrCacheTable::attrCache[relId];
