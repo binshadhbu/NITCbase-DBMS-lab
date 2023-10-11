@@ -41,26 +41,46 @@ NOTE: this function expects the caller to allocate memory for `head`
 */
 // load the block header into the argument pointer
 int BlockBuffer::getHeader(HeadInfo *head) {
-  unsigned char *bufferPtr;
-  int ret = loadBlockAndGetBufferPtr(
-      &bufferPtr); // Returns a pointer to the first byte of the buffer storing
-                   // the block. This function will load the block to the buffer
-                   // if it is not already present.
-  if (ret != SUCCESS)
-    return ret;
-  // read the block at this.blockNum into the buffer
-  unsigned char buffer[BLOCK_SIZE];
-  Disk::readBlock(buffer, this->blockNum);
+  // unsigned char *bufferPtr;
+  // int ret = loadBlockAndGetBufferPtr(
+  //     &bufferPtr); // Returns a pointer to the first byte of the buffer storing
+  //                  // the block. This function will load the block to the buffer
+  //                  // if it is not already present.
+  // if (ret != SUCCESS)
+  //   return ret;
+  // // read the block at this.blockNum into the buffer
+  // unsigned char buffer[BLOCK_SIZE];
+  // Disk::readBlock(buffer, this->blockNum);
 
-  // populate the numEntries, numAttrs and numSlots fields in *head
-  memcpy(&head->pblock, buffer + 4, 4);
-  memcpy(&head->lblock, buffer + 8, 4);
-  memcpy(&head->rblock, buffer + 12, 4);
-  memcpy(&head->numEntries, buffer + 16, 4);
-  memcpy(&head->numAttrs, buffer + 20, 4);
-  memcpy(&head->numSlots, bufferPtr + 24, 4);
+  // // populate the numEntries, numAttrs and numSlots fields in *head
+  // memcpy(&head->pblock, buffer + 4, 4);
+  // memcpy(&head->lblock, buffer + 8, 4);
+  // memcpy(&head->rblock, buffer + 12, 4);
+  // memcpy(&head->numEntries, buffer + 16, 4);
+  // memcpy(&head->numAttrs, buffer + 20, 4);
+  // memcpy(&head->numSlots, bufferPtr + 24, 4);
 
-  return SUCCESS;
+  // return SUCCESS;
+
+
+
+
+	// reading the buffer block from cache
+	// //Disk::readBlock(buffer, this->blockNum);
+	unsigned char *buffer;
+	int ret = loadBlockAndGetBufferPtr(&buffer);
+	if (ret != SUCCESS)
+		return ret;
+
+	// TODO: populate the numEntries, numAttrs and numSlots fields in *head
+	memcpy(&head->pblock, buffer + 4, 4);
+	memcpy(&head->lblock, buffer + 8, 4);
+	memcpy(&head->rblock, buffer + 12, 4);
+	memcpy(&head->numEntries, buffer + 16, 4);
+	memcpy(&head->numAttrs, buffer + 20, 4);
+	memcpy(&head->numSlots, buffer + 24, 4);
+
+	return SUCCESS;
 }
 
 /*
@@ -69,38 +89,29 @@ NOTE: this function expects the caller to allocate memory for `rec`
 */
 // load the record at slotNum into the argument pointer
 int RecBuffer::getRecord(union Attribute *record, int slotNum) {
-  // get the header using this.getHeader() function
-
-  unsigned char *bufferPtr;
-  int ret = loadBlockAndGetBufferPtr(&bufferPtr);
-  if (ret != SUCCESS) {
-    return ret;
-  }
-
   HeadInfo head;
-  BlockBuffer::getHeader(&head);
+	BlockBuffer::getHeader(&head);
 
-  int attrCount = head.numAttrs;
-  int slotCount = head.numSlots;
+	int attrCount = head.numAttrs;
+	int slotCount = head.numSlots;
 
-  // read the block at this.blockNum into a buffer
-  unsigned char buffer[BLOCK_SIZE];
-  Disk::readBlock(buffer, this->blockNum);
+	// read the block at this.blockNum into a buffer
+	unsigned char *buffer;
+	// // Disk::readBlock(buffer, this->blockNum);
+	int ret = loadBlockAndGetBufferPtr(&buffer);
+	if (ret != SUCCESS)
+		return ret;
 
-  /* record at slotNum will be at offset HEADER_SIZE + slotMapSize + (recordSize
-     * slotNum)
-     - each record will have size attrCount * ATTR_SIZE
-     - slotMap will be of size slotCount
-  */
-  int recordSize = attrCount * ATTR_SIZE;
-  unsigned char *slotPointer =
-      buffer +
-      (32 + slotCount + (recordSize * slotNum)); // calculate buffer + offset
+	//* record at slotNum will be at offset HEADER_SIZE + slotMapSize + (recordSize * slotNum)
+	//     each record will have size attrCount * ATTR_SIZE
+	//     slotMap will be of size slotCount
+	int recordSize = attrCount * ATTR_SIZE;
+	unsigned char *slotPointer = buffer + (32 + slotCount + (recordSize * slotNum)); // calculate buffer + offset
 
-  // load the record into the rec data structure
-  memcpy(record, slotPointer, recordSize);
+	// load the record into the rec data structure
+	memcpy(record, slotPointer, recordSize);
 
-  return SUCCESS;
+	return SUCCESS;
 }
 
 /*
