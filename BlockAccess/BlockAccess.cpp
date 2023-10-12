@@ -381,7 +381,7 @@ int BlockAccess::insert(int relId, Attribute *record) {
     // get a new record block (using the appropriate RecBuffer constructor!)
     // get the block number of the newly allocated block
     // (use BlockBuffer::getBlockNum() function)
-    RecBuffer blockBuffer('R');
+    RecBuffer blockBuffer;
     blockNum = blockBuffer.getBlockNum();
     // let ret be the return value of getBlockNum() function call
     if (blockNum == E_DISKFULL) {
@@ -409,11 +409,11 @@ int BlockAccess::insert(int relId, Attribute *record) {
     header.blockType = REC;
     header.pblock = header.rblock = -1;
     header.lblock = -1;
-    if (relCatEntry.numRecs == 0) {
-      header.lblock = -1;
-    } else {
-      header.lblock = prevBlockNum;
-    }
+    // if (relCatEntry.numRecs == 0) {
+    //   header.lblock = -1;
+    // } else {
+    //   header.lblock = prevBlockNum;
+    // }
     header.numAttrs = relCatEntry.numAttrs;
     header.numEntries = 0;
     header.numSlots = relCatEntry.numSlotsPerBlk;
@@ -441,11 +441,13 @@ int BlockAccess::insert(int relId, Attribute *record) {
       HeadInfo prevHeader;
       prevBuffer.getHeader(&prevHeader);
       prevHeader.rblock = rec_id.block;
+      prevBuffer.setHeader(&prevHeader);
     } else // else
     {
       // update first block field in the relation catalog entry to the
       // new block (using RelCacheTable::setRelCatEntry() function)
       relCatEntry.firstBlk = rec_id.block;
+       RelCacheTable::setRelCatEntry(relId, &relCatEntry);
     }
     relCatEntry.lastBlk = rec_id.block;
     RelCacheTable::setRelCatEntry(relId, &relCatEntry);
