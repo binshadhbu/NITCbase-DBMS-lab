@@ -227,7 +227,11 @@ int OpenRelTable::closeRel(int relId) {
   if (AttrCacheTable::attrCache[relId] == nullptr) {
     return E_RELNOTOPEN;
   }
-
+int bugblock=01;
+if(RelCacheTable::relCache[relId]->recId.block<0 or RelCacheTable::relCache[relId]->recId.block>DISK_BLOCKS){
+  printf("block number out of bound")
+  return E_INVALIDBLOCK;
+}
   if (RelCacheTable::relCache[relId]->dirty)
   {
 
@@ -235,7 +239,7 @@ int OpenRelTable::closeRel(int relId) {
     Then convert it to a record using RelCacheTable::relCatEntryToRecord(). */
     Attribute attrCatRecord[ATTRCAT_NO_ATTRS];
     RelCacheTable::relCatEntryToRecord(&(RelCacheTable::relCache[relId]->relCatEntry),attrCatRecord);
-    
+    bugblock=RelCacheTable::relCache[relId]->recId.block;
     // declaring an object of RecBuffer class to write back to the buffer
     RecBuffer relCatBlock(RelCacheTable::relCache[relId]->recId.block);
     relCatBlock.setRecord(attrCatRecord,RelCacheTable::relCache[relId]->recId.slot);

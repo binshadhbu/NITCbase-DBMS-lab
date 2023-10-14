@@ -111,6 +111,7 @@ int RelCacheTable::setRelCatEntry(int relId, RelCatEntry *relCatBuf) {
   memcpy(&(relCache[relId]->relCatEntry),relCatBuf,sizeof(RelCacheEntry));
   // copy the relCatBuf to the corresponding Relation Catalog entry in
   // the Relation Cache Table.
+  relCache[relId]->relCatEntry=*relCatBuf;
 
   // set the dirty flag of the corresponding Relation Cache entry in
   // the Relation Cache Table.
