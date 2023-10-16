@@ -96,14 +96,14 @@ int StaticBuffer::getFreeBuffer(int blockNum) {
 int StaticBuffer::getBufferNum(int blockNum) {
   // Check if blockNum is valid (between zero and DISK_BLOCKS)
   // and return E_OUTOFBOUND if not valid.
-  if (blockNum < 0 || blockNum > DISK_BLOCKS) {
+  if (blockNum < 0 || blockNum >= DISK_BLOCKS) {
     return E_OUTOFBOUND;
   }
 
   // find and return the bufferIndex which corresponds to blockNum (check
   // metainfo)
   for (int bufferIndex = 0; bufferIndex < BUFFER_CAPACITY; bufferIndex++) {
-    if (metainfo[bufferIndex].blockNum == blockNum) {
+    if (metainfo[bufferIndex].blockNum == blockNum and metainfo[bufferIndex].free==false) {
       return bufferIndex;
     }
   }

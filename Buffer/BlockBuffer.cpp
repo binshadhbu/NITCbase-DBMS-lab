@@ -104,12 +104,12 @@ int BlockBuffer::loadBlockAndGetBufferPtr(unsigned char **buffPtr) {
       StaticBuffer::metainfo[bufferIndex].timeStamp++;
     }
     StaticBuffer::metainfo[bufferNum].timeStamp = 0;
-  } else {
+  } else if(bufferNum==E_BLOCKNOTINBUFFER){
 
     bufferNum = StaticBuffer::getFreeBuffer(this->blockNum);
 
-    if (bufferNum == E_OUTOFBOUND) {
-      return E_OUTOFBOUND; // the blockNum is invalid
+    if (bufferNum == E_OUTOFBOUND or bufferNum==FAILURE) {
+      return bufferNum; // the blockNum is invalid
     }
 
     Disk::readBlock(StaticBuffer::blocks[bufferNum], this->blockNum);
@@ -134,7 +134,8 @@ int RecBuffer::setRecord(union Attribute *rec, int slotNum) {
 
   /* get the header of the block using the getHeader() function */
   HeadInfo head;
-  BlockBuffer::getHeader(&head);
+ int ret= BlockBuffer::getHeader(&head);
+ if(ret!=SUCCESS)return ret;
 
   // get number of attributes in the block.
   int attrCount = head.numAttrs;
@@ -159,7 +160,7 @@ int RecBuffer::setRecord(union Attribute *rec, int slotNum) {
 
   memcpy(slotPointer, rec, recordSize);
   // update dirty bit using setDirtyBit()
-  int ret = StaticBuffer::setDirtyBit(this->blockNum);
+   ret = StaticBuffer::setDirtyBit(this->blockNum);
   if (ret != SUCCESS) {
     std::cout << "something srong with the setDirty function";
   }
