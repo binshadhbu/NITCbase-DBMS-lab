@@ -5,27 +5,34 @@
 
 BlockBuffer::BlockBuffer(int blockNum) { this->blockNum = blockNum; }
 
-BlockBuffer::BlockBuffer(char blocktype) {
 
-  int blockType = blocktype == 'R' ? REC : UNUSED_BLK;
-  int blockNum = getFreeBlock(blockType);
-  if (blockNum == E_DISKFULL) {
-    printf("Didk full\n");
-  }
-  this->blockNum = blockNum;
-  if (blockNum < 0 or blockNum >= DISK_BLOCKS) {
-    printf("invalis disk number\n");
-  }
-  // allocate a block on the disk and a buffer in memory to hold the new block
-  // of given type using getFreeBlock function and get the return error codes if
-  // any.
+BlockBuffer::BlockBuffer(char blocktype){
+    // allocate a block on the disk and a buffer in memory to hold the new block of
+    // given type using getFreeBlock function and get the return error codes if any.
+	// * NOTE: this line should be changed later
+	int blockType = blocktype == 'R' ? REC : UNUSED_BLK; 
 
-  // set the blockNum field of the object to that of the allocated block
-  // number if the method returned a valid block number,
-  // otherwise set the error code returned as the block number.
+	int blockNum = getFreeBlock(blockType);
+	if (blockNum < 0 || blockNum >= DISK_BLOCKS) {
+		std::cout << "Error: Block is not available\n";
+		this->blockNum = blockNum;
+		return;
+	}
 
-  // (The caller must check if the constructor allocatted block successfully
-  // by checking the value of block number field.)
+	// // int bufferIndex = StaticBuffer::getFreeBuffer(blockNum);
+	// // if (bufferIndex < 0 || bufferIndex >= BUFFER_CAPACITY) {
+	// // 	std::cout << "Error: Buffer is not available\n";
+	// // 	return;
+	// // }
+		
+    // set the blockNum field of the object to that of the allocated block
+    // number if the method returned a valid block number,
+    // otherwise set the error code returned as the block number.
+
+	this->blockNum = blockNum;
+
+    // (The caller must check if the constructor allocatted block successfully
+    // by checking the value of block number field.)
 }
 
 // calls the parent class constructor
@@ -229,6 +236,8 @@ int BlockBuffer::setHeader(struct HeadInfo *head) {
   bufferHeader->pblock = head->pblock;
   bufferHeader->rblock = head->rblock;
   bufferHeader->blockType = head->blockType;
+  bufferHeader->numAttrs=head->numAttrs;
+  
 
   // update dirty bit by calling StaticBuffer::setDirtyBit()
   // if setDirtyBit() failed, return the error code
