@@ -118,6 +118,18 @@ OpenRelTable::~OpenRelTable()
 		RelCacheTable::getRelCatEntry(ATTRCAT_RELID,&relCatBuffer);
 		Attribute relCatRecord[RELCAT_NO_ATTRS];
 		RelCacheTable::relCatEntryToRecord(&relCatBuffer,relCatRecord);
+		RecId recId=RelCacheTable::relCache[ATTRCAT_RELID]->recId;
+		RecBuffer relCatBlock(recId.block);
+		relCatBlock.setRecord(relCatRecord,recId.slot);
+	}
+	free(RelCacheTable::relCache[ATTRCAT_RELID]);
+
+	if(RelCacheTable::relCache[RELCAT_RELID]->dirty==true){
+		RelCatEntry relCatBuffer;
+		RelCacheTable::getRelCatEntry(RELCAT_RELID,&relCatBuffer);
+		Attribute relCatRecord[ATTRCAT_NO_ATTRS];
+		RelCacheTable::relCatEntryToRecord(&relCatBuffer,relCatRecord);
+		RecId recId=RelCacheTable::relCache[RELCAT_RELID]->recId;
 
 	}
 	// free the memory allocated for rel-id 0 and 1 in the caches
