@@ -113,7 +113,13 @@ OpenRelTable::~OpenRelTable()
 		if (!tableMetaInfo[i].free)
 			OpenRelTable::closeRel(i); // we will implement this function later
 
-			
+	if(RelCacheTable::relCache[ATTRCAT_RELID]->dirty==true){
+		RelCatEntry relCatBuffer;
+		RelCacheTable::getRelCatEntry(ATTRCAT_RELID,&relCatBuffer);
+		Attribute relCatRecord[RELCAT_NO_ATTRS];
+		RelCacheTable::relCatEntryToRecord(&relCatBuffer,relCatRecord);
+
+	}
 	// free the memory allocated for rel-id 0 and 1 in the caches
 }
 
