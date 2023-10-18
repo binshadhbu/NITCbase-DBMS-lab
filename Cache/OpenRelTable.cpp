@@ -113,6 +113,7 @@ OpenRelTable::~OpenRelTable()
 		if (!tableMetaInfo[i].free)
 			OpenRelTable::closeRel(i); // we will implement this function later
 
+			
 	// free the memory allocated for rel-id 0 and 1 in the caches
 }
 
