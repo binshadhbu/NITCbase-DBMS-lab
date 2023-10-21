@@ -1,9 +1,7 @@
 #include "Schema.h"
 
 #include <cmath>
-#include<map>
 #include <cstring>
-#include <map>
 using namespace std;
 
 
@@ -82,11 +80,11 @@ int Schema::renameAttr(char *relName, char *oldAttrName, char *newAttrName) {
 
 
 
-int createRel(char relName[],int nAttrs, char attrs[][ATTR_SIZE],int attrtype[]){
+int Schema:: createRel(char relName[],int nAttrs, char attrs[][ATTR_SIZE],int attrtype[]){
 
     // declare variable relNameAsAttribute of type Attribute
     Attribute relNameAsAttribute;
-    strcpy(relNameAsAttribute.sVal,relName);
+    strcpy((char *)relNameAsAttribute.sVal,(const char*)relName);
     // copy the relName into relNameAsAttribute.sVal
 
     // declare a variable targetRelId of type RecId
@@ -107,7 +105,7 @@ int createRel(char relName[],int nAttrs, char attrs[][ATTR_SIZE],int attrtype[])
     // compare every pair of attributes of attrNames[] array
     // if any attribute names have same string value,
     //     return E_DUPLICATEATTR (i.e 2 attributes have same value)
-    map<char [],int>mp;
+  
 
     for(int i=0;i<nAttrs;i++){
       for(int j=i+1;j<nAttrs;j++){
@@ -144,7 +142,7 @@ int createRel(char relName[],int nAttrs, char attrs[][ATTR_SIZE],int attrtype[])
     // iterate through 0 to numOfAttributes - 1 :
     for(int attrIndex=0;attrIndex<nAttrs;attrIndex++)
     {
-      Attribute attrCatRecord[6];
+      Attribute attrCatRecord[ATTRCAT_NO_ATTRS];
         /* declare Attribute attrCatRecord[6] to store the attribute catalog
            record corresponding to i'th attribute of the argument passed*/
         // (where i is the iterator of the loop)

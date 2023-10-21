@@ -130,9 +130,27 @@ OpenRelTable::~OpenRelTable()
 		Attribute relCatRecord[ATTRCAT_NO_ATTRS];
 		RelCacheTable::relCatEntryToRecord(&relCatBuffer,relCatRecord);
 		RecId recId=RelCacheTable::relCache[RELCAT_RELID]->recId;
+		RecBuffer attrCatRecord(recId.block);
+		attrCatRecord.setRecord(relCatRecord,recId.slot);
 
 	}
+	free(RelCacheTable::relCache[RELCAT_RELID]);
 	// free the memory allocated for rel-id 0 and 1 in the caches
+	for(int relID=RELCAT_RELID;relID<=ATTRCAT_RELID;relID++){
+		AttrCacheEntry *curr=AttrCacheTable::attrCache[relID],*next=NULL;
+		while(curr!=nullptr){
+			next=curr->next;
+			if(curr->dirty==true){
+				AttrCatEntry attrCatEntry=curr->attrCatEntry;
+				Attribute AttrCatrecord[ATTRCAT_NO_ATTRS];
+				AttrCacheTable::attrCatEntryToRecord(&attrCatEntry,AttrCatrecord);
+				RecBuffer attrCatBlock(curr->recId.block);
+				attrCatBlock.setRecord(AttrCatrecord,curr->recId.slot);
+			}
+			free(curr);
+			curr=next;
+		}
+	}
 }
 
 int OpenRelTable::getFreeOpenRelTableEntry()
@@ -143,8 +161,7 @@ int OpenRelTable::getFreeOpenRelTableEntry()
 	for (int relId = 0; relId < MAX_OPEN; relId++)
 		if (tableMetaInfo[relId].free)
 			return relId;
-
-	//! if found return the relation id, else return E_CACHEFULL.
+			
 	return E_CACHEFULL;
 }
 
