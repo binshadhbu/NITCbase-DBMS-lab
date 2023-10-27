@@ -68,126 +68,112 @@ int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE],
 
   RelCatEntry relCatEntry;
   RelCacheTable::getRelCatEntry(srcRelId, &relCatEntry);
-  // get relCatEntry using RelCacheTable::getRelCatEntry()
-  /************************
-  The following code prints the contents of a relation directly to the output
-  console. Direct console output is not permitted by the actual the NITCbase
-  specification and the output can only be inserted into a new relation. We will
-  be modifying it in the later stages to match the specification.
-  ************************/
+  int src_nAttrs = relCatEntry.numAttrs;
 
-  printf("|");
-  for (int i = 0; i < relCatEntry.numAttrs; ++i) {
-    AttrCatEntry attrCatEntry;
-    // get attrCatEntry at offset i using AttrCacheTable::getAttrCatEntry()
-    AttrCacheTable::getAttrCatEntry(srcRelId, i, &attrCatEntry);
-    printf(" %s |", attrCatEntry.attrName);
+  char attr_names[src_nAttrs][ATTR_SIZE];
+  int attr_types[src_nAttrs];
+
+  for (int i = 0; i < src_nAttrs; i++) {
+    AttrCatEntry attrCatEntryBuffer;
+    AttrCacheTable::getAttrCatEntry(srcRelId, i, &attrCatEntryBuffer);
+    strcpy(attr_names[i], attrCatEntryBuffer.attrName);
+    attr_types[i] = attrCatEntryBuffer.attrType;
   }
-  printf("\n");
 
-  while (true) {
-    RecId searchRes = BlockAccess::linearSearch(srcRelId, attr, attrVal, op);
+  int ret = Schema::createRel(targetRel, src_nAttrs, attr_names, attr_types);
+  if (ret != SUCCESS)
+    return ret;
 
-    if (searchRes.block != -1 && searchRes.slot != -1) {
+  int targetrelId = OpenRelTable::openRel(targetRel);
+  if (targetrelId < 0 or targetrelId >= MAX_OPEN) {
+    Schema::deleteRel(targetRel);
+    return ret;
+  }
+  
+  RelCacheTable::resetSearchIndex(srcRelId);
+  AttrCacheTable::resetSearchIndex(srcRelId,attr);
+  Attribute record[src_nAttrs];
 
-      // get the record at searchRes using BlockBuffer.getRecord
-      // print the attribute values in the same format as above
-      AttrCatEntry attrCatEntry;
-      RecBuffer BlockBuffer(searchRes.block);
-      HeadInfo blockHeader;
-      BlockBuffer.getHeader(&blockHeader);
-
-      Attribute recordBuffer[blockHeader.numAttrs];
-      BlockBuffer.getRecord(recordBuffer, searchRes.slot);
-
-      for (int i = 0; i < relCatEntry.numAttrs; ++i) {
-        AttrCacheTable::getAttrCatEntry(srcRelId, i, &attrCatEntry);
-        if (attrCatEntry.attrType == NUMBER)
-          printf(" %d |", (int)recordBuffer[i].nVal);
-        else
-          printf(" %s |", recordBuffer[i].sVal);
-      }
-      printf("\n");
-
-    } else {
-
-      // (all records over)
-      break;
+  while(BlockAccess::search(srcRelId,record,attr,attrVal,op)==SUCCESS){
+    ret=BlockAccess::insert(targetrelId,record);
+    if(ret!=SUCCESS){
+      Schema::closeRel(targetRel);
+      Schema::deleteRel(targetRel);
+      return ret;
     }
+
   }
+  ret=Schema::closeRel(targetRel);
+
+
 
   return SUCCESS;
 }
 
 // will return if a string can be parsed as a floating point number
 
-int Algebra::insert(char relName[ATTR_SIZE], int nAttrs, char record[][ATTR_SIZE]){
-    
-    if(strcmp(relName,RELCAT_RELNAME)==0 or strcmp(relName,ATTRCAT_RELNAME)==0){
-      return E_NOTPERMITTED;
+int Algebra::insert(char relName[ATTR_SIZE], int nAttrs,
+                    char record[][ATTR_SIZE]) {
+
+  if (strcmp(relName, RELCAT_RELNAME) == 0 or
+      strcmp(relName, ATTRCAT_RELNAME) == 0) {
+    return E_NOTPERMITTED;
+  }
+
+  // get the relation's rel-id using OpenRelTable::getRelId() method
+  int relId = OpenRelTable::getRelId(relName);
+
+  if (relId == E_RELNOTOPEN) {
+    return E_RELNOTOPEN;
+  }
+
+  RelCatEntry relCatBuf;
+  RelCacheTable::getRelCatEntry(relId, &relCatBuf);
+
+  // if relation is not open in open relation table, return E_RELNOTOPEN
+  // (check if the value returned from getRelId function call = E_RELNOTOPEN)
+  // get the relation catalog entry from relation cache
+  // (use RelCacheTable::getRelCatEntry() of Cache Layer)
+
+  /* if relCatEntry.numAttrs != numberOfAttributes in relation,
+     return E_NATTRMISMATCH */
+  if (relCatBuf.numAttrs != nAttrs) {
+    return E_NATTRMISMATCH;
+  }
+
+  // let recordValues[numberOfAttributes] be an array of type union Attribute
+  Attribute recordValues[nAttrs];
+
+  /*
+      Converting 2D char array of record values to Attribute array recordValues
+   */
+  // iterate through 0 to nAttrs-1: (let i be the iterator)
+  for (int i = 0; i < nAttrs; i++) {
+    // get the attr-cat entry for the i'th attribute from the attr-cache
+    // (use AttrCacheTable::getAttrCatEntry())
+    AttrCatEntry attrCatEntry;
+    AttrCacheTable::getAttrCatEntry(relId, i, &attrCatEntry);
+    int type = attrCatEntry.attrType;
+    // let type = attrCatEntry.attrType;
+
+    if (type == NUMBER) {
+      // if the char array record[i] can be converted to a number
+      // (check this using isNumber() function)
+      if (isNumber(record[i])) {
+        /* convert the char array to numeral and store it
+           at recordValues[i].nVal using atof() */
+        recordValues[i].nVal = atof(record[i]);
+      } else {
+        return E_ATTRTYPEMISMATCH;
+      }
+    } else if (type == STRING) {
+      // copy record[i] to recordValues[i].sVal
+      strcpy(recordValues[i].sVal, record[i]);
     }
+  }
+  int retVal = BlockAccess::insert(relId, recordValues);
+  // insert the record by calling BlockAccess::insert() function
+  // let retVal denote the return value of insert call
 
-    // get the relation's rel-id using OpenRelTable::getRelId() method
-    int relId = OpenRelTable::getRelId(relName);
-    
-    if(relId==E_RELNOTOPEN){
-      return E_RELNOTOPEN;
-    }
-
-    RelCatEntry relCatBuf;
-    RelCacheTable::getRelCatEntry(relId,&relCatBuf);
-
-    // if relation is not open in open relation table, return E_RELNOTOPEN
-    // (check if the value returned from getRelId function call = E_RELNOTOPEN)
-    // get the relation catalog entry from relation cache
-    // (use RelCacheTable::getRelCatEntry() of Cache Layer)
-
-    /* if relCatEntry.numAttrs != numberOfAttributes in relation,
-       return E_NATTRMISMATCH */
-       if(relCatBuf.numAttrs!=nAttrs){
-        return E_NATTRMISMATCH;
-       }
-
-    // let recordValues[numberOfAttributes] be an array of type union Attribute
-    Attribute recordValues[nAttrs];
-
-    /*
-        Converting 2D char array of record values to Attribute array recordValues
-     */
-    // iterate through 0 to nAttrs-1: (let i be the iterator)
-    for(int i=0;i<nAttrs;i++)
-    {
-        // get the attr-cat entry for the i'th attribute from the attr-cache
-        // (use AttrCacheTable::getAttrCatEntry())
-        AttrCatEntry attrCatEntry;
-        AttrCacheTable::getAttrCatEntry(relId,i,&attrCatEntry);
-        int type=attrCatEntry.attrType;
-        // let type = attrCatEntry.attrType;
-
-        if (type == NUMBER)
-        {
-            // if the char array record[i] can be converted to a number
-            // (check this using isNumber() function)
-            if(isNumber(record[i]))
-            {
-                /* convert the char array to numeral and store it
-                   at recordValues[i].nVal using atof() */
-                   recordValues[i].nVal=atof(record[i]);
-            }
-            else
-            {
-                return E_ATTRTYPEMISMATCH;
-            }
-        }
-        else if (type == STRING)
-        {
-            // copy record[i] to recordValues[i].sVal
-            strcpy(recordValues[i].sVal,record[i]);
-        }
-    }
-    int retVal=BlockAccess::insert(relId,recordValues);
-    // insert the record by calling BlockAccess::insert() function
-    // let retVal denote the return value of insert call
-
-    return retVal;
+  return retVal;
 }
