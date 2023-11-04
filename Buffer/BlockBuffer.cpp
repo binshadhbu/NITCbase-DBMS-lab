@@ -24,6 +24,11 @@ BlockBuffer::BlockBuffer(char blocktype){
 		return;
 	}
 
+	// // int bufferIndex = StaticBuffer::getFreeBuffer(blockNum);
+	// // if (bufferIndex < 0 || bufferIndex >= BUFFER_CAPACITY) {
+	// // 	std::cout << "Error: Buffer is not available\n";
+	// // 	return;
+	// // }
 		
     // set the blockNum field of the object to that of the allocated block
     // number if the method returned a valid block number,
@@ -155,6 +160,7 @@ int RecBuffer::setRecord(union Attribute *record, int slotNum)
     // get the number of slots in the block.
 	int slotCount = head.numSlots;
 
+	//! if input slotNum is not in the permitted range 
 	if (slotNum >= slotCount) return E_OUTOFBOUND;
 
 	int recordSize = attrCount * ATTR_SIZE;
@@ -165,6 +171,9 @@ int RecBuffer::setRecord(union Attribute *record, int slotNum)
 
 	ret = StaticBuffer::setDirtyBit(this->blockNum);
 
+	//! The above function call should not fail since the block is already
+    //! in buffer and the blockNum is valid. If the call does fail, there
+    //! exists some other issue in the code) 
 	if (ret != SUCCESS) {
 		std::cout << "There is some error in the code!\n";
 		exit(1);
@@ -216,6 +225,8 @@ int BlockBuffer::loadBlockAndGetBufferPtr(unsigned char **buffPtr)
 	{ 
 		bufferNum = StaticBuffer::getFreeBuffer(this->blockNum);
 
+		//! no free space found in the buffer (currently)
+		//! or some other error occurred in the process
 		if (bufferNum == E_OUTOFBOUND || bufferNum == FAILURE)
 			return bufferNum;
 
@@ -328,6 +339,8 @@ int BlockBuffer::getFreeBlock(int blockType){
 		if (StaticBuffer::blockAllocMap[blockNum] == UNUSED_BLK)
 			break;
 	}
+
+    //! if no block is free, return E_DISKFULL.
 	if (blockNum == DISK_BLOCKS) return E_DISKFULL;
 
     // set the object's blockNum to the block number of the free block.

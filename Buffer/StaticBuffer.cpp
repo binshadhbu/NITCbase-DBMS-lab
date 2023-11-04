@@ -120,6 +120,7 @@ int StaticBuffer::getBufferNum(int blockNum) {
 			return bufferBlock;
 	}
 
+	//! if block is not in the buffer
 	return E_BLOCKNOTINBUFFER;
 }
 
@@ -127,9 +128,11 @@ int StaticBuffer::setDirtyBit(int blockNum){
     // find the buffer index corresponding to the block using getBufferNum().
 	int bufferIndex = getBufferNum(blockNum);
 
+    //! if block is not present in the buffer (bufferNum = E_BLOCKNOTINBUFFER)
 	if (bufferIndex == E_BLOCKNOTINBUFFER)
         return E_BLOCKNOTINBUFFER;
 
+    //! if blockNum is out of bound (bufferNum = E_OUTOFBOUND)
 	if (bufferIndex == E_OUTOFBOUND)
         return E_OUTOFBOUND;
 

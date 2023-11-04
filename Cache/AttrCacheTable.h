@@ -24,32 +24,6 @@ typedef struct AttrCacheEntry
 	struct AttrCacheEntry *next;
 } AttrCacheEntry;
 
-<<<<<<< HEAD
-class AttrCacheTable {
-  friend class OpenRelTable;
-
- public:
-  // methods
-  static int getAttrCatEntry(int relId, char attrName[ATTR_SIZE], AttrCatEntry *attrCatBuf);
-  static int getAttrCatEntry(int relId, int attrOffset, AttrCatEntry *attrCatBuf);
-  static int setAttrCatEntry(int relId, char attrName[ATTR_SIZE], AttrCatEntry *attrCatBuf);
-  static int setAttrCatEntry(int relId, int attrOffset, AttrCatEntry *attrCatBuf);
-  static int getSearchIndex(int relId, char attrName[ATTR_SIZE], IndexId *searchIndex);
-  static int getSearchIndex(int relId, int attrOffset, IndexId *searchIndex);
-  static int setSearchIndex(int relId, char attrName[ATTR_SIZE], IndexId *searchIndex);
-  static int setSearchIndex(int relId, int attrOffset, IndexId *searchIndex);
-  static int resetSearchIndex(int relId, char attrName[ATTR_SIZE]);
-  static int resetSearchIndex(int relId, int attrOffset);
-  static int getAttributeOffset(int relId, char attrName[ATTR_SIZE]);
-
- private:
-  // field
-  static AttrCacheEntry *attrCache[MAX_OPEN];
-
-  // methods
-  static void recordToAttrCatEntry(union Attribute record[ATTRCAT_NO_ATTRS], AttrCatEntry *attrCatEntry);
-  static void attrCatEntryToRecord(AttrCatEntry *attrCatEntry, union Attribute record[ATTRCAT_NO_ATTRS]);
-=======
 class AttrCacheTable
 {
 	friend class OpenRelTable;
@@ -75,7 +49,6 @@ private:
 	// methods
 	static void recordToAttrCatEntry(union Attribute record[ATTRCAT_NO_ATTRS], AttrCatEntry *attrCatEntry);
 	static void attrCatEntryToRecord(AttrCatEntry *attrCatEntry, union Attribute record[ATTRCAT_NO_ATTRS]);
->>>>>>> stage8
 };
 
 #endif // NITCBASE_ATTRCACHETABLE_H
