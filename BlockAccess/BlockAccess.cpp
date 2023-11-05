@@ -1,4 +1,5 @@
 #include "BlockAccess.h"
+#include <iostream>
 
 #include <cstring>
 
@@ -416,6 +417,7 @@ int BlockAccess::insert(int relId, Attribute *record) {
     // the relation. (use RelCacheTable::setRelCatEntry function)
 	relCatEntry.numRecs++;
 	RelCacheTable::setRelCatEntry(relId, &relCatEntry);
+	std::cout<<relCatEntry.numRecs<<" inserted "<<'\n';
 
     return SUCCESS;
 }
