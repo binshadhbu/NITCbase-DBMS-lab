@@ -378,16 +378,27 @@ int OpenRelTable::closeRel(int relId) {
 	//* because we are not modifying the attribute cache at this stage,
 	//* write-back is not required. We will do it in subsequent
   	//* stages when it becomes needed)
-
 	AttrCacheEntry *head = AttrCacheTable::attrCache[relId];
 	AttrCacheEntry *next = head->next;
 
-	while (next) {
+	while (true) {
+		if (head->dirty)
+		{
+			Attribute attrCatRecord [ATTRCAT_NO_ATTRS];
+			AttrCacheTable::attrCatEntryToRecord(&(head->attrCatEntry), attrCatRecord);
+
+			RecBuffer attrCatBlockBuffer (head->recId.block);
+			attrCatBlockBuffer.setRecord(attrCatRecord, head->recId.slot);
+		}
+
+
 		free (head);
 		head = next;
+
+		if (head == NULL) break;
 		next = next->next;
 	}
-	free(head);	
+
 
 	// update `tableMetaInfo` to set `relId` as a free slot
 	// update `relCache` and `attrCache` to set the entry at `relId` to nullptr

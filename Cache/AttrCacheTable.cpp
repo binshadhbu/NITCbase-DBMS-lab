@@ -219,3 +219,65 @@ int AttrCacheTable::getSearchIndex(int relId, int attrOffset,
   }
   return E_ATTRNOTEXIST;
 }
+
+
+int AttrCacheTable::setAttrCatEntry(int relId, char attrName[ATTR_SIZE], AttrCatEntry *attrCatBuf) {
+
+  if(relId<0 or relId>=MAX_OPEN) {
+    return E_OUTOFBOUND;
+  }
+
+  if(attrCache[relId]==nullptr) {
+    return E_RELNOTOPEN;
+  }
+  AttrCacheEntry *curr=attrCache[relId];
+  while(curr){
+    if(strcmp(curr->attrCatEntry.attrName,attrName)==0){
+      strcpy(curr->attrCatEntry.attrName,attrCatBuf->attrName);
+      strcpy(curr->attrCatEntry.relName,attrCatBuf->relName);
+      curr->attrCatEntry.attrType=attrCatBuf->attrType;
+      curr->attrCatEntry.offset=attrCatBuf->offset;
+      curr->attrCatEntry.primaryFlag=attrCatBuf->primaryFlag;
+      curr->attrCatEntry.rootBlock=attrCatBuf->rootBlock;
+      curr->dirty=true;
+      return SUCCESS;
+    }
+    curr=curr->next;
+  }
+  return E_ATTRNOTEXIST;
+}
+
+
+int AttrCacheTable::setAttrCatEntry(int relId, int attrOffset, AttrCatEntry *attrCatBuf)
+{
+    // check if 0 <= relId < MAX_OPEN and return E_OUTOFBOUND otherwise
+    if (relId < 0 || relId >= MAX_OPEN)
+        return E_OUTOFBOUND;
+
+    //check if attrCache[relId] == nullptr and return E_RELNOTOPEN if true
+    if (attrCache[relId] == nullptr)
+        return E_RELNOTOPEN;
+
+    // traverse the linked list of attribute cache entries
+    for (AttrCacheEntry *entry = attrCache[relId]; entry != nullptr; entry = entry->next)
+    {
+        if (entry->attrCatEntry.offset == attrOffset)
+        {
+            // TODO: copy entry->attrCatEntry to *attrCatBuf and return SUCCESS;
+            strcpy(entry->attrCatEntry.relName, attrCatBuf->relName);
+            strcpy(entry->attrCatEntry.attrName, attrCatBuf->attrName);
+
+            entry->attrCatEntry.attrType = attrCatBuf->attrType;
+            entry->attrCatEntry.primaryFlag = attrCatBuf->primaryFlag;
+            entry->attrCatEntry.rootBlock = attrCatBuf->rootBlock;
+            entry->attrCatEntry.offset = attrCatBuf->offset;
+
+            entry->dirty = true;
+
+            return SUCCESS;
+        }
+    }
+
+    //there is no attribute at this offset
+    return E_ATTRNOTEXIST;
+}
