@@ -30,11 +30,13 @@ int Frontend::alter_table_rename_column(char relname[ATTR_SIZE], char attrname_f
 
 int Frontend::create_index(char relname[ATTR_SIZE], char attrname[ATTR_SIZE]) {
   // Schema::createIndex
+  Schema::createIndex(relname, attrname);
   return SUCCESS;
 }
 
 int Frontend::drop_index(char relname[ATTR_SIZE], char attrname[ATTR_SIZE]) {
   // Schema::dropIndex
+  Schema::dropIndex(relname, attrname);
   return SUCCESS;
 }
 

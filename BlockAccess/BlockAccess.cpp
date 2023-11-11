@@ -417,17 +417,49 @@ int BlockAccess::insert(int relId, Attribute *record) {
     // the relation. (use RelCacheTable::setRelCatEntry function)
 	relCatEntry.numRecs++;
 	RelCacheTable::setRelCatEntry(relId, &relCatEntry);
-	std::cout<<relCatEntry.numRecs<<" inserted "<<'\n';
+	
 
-    return SUCCESS;
+	//!after indexing part 
+
+	int flag=SUCCESS;
+	// Iterate over all the attributes of the relation
+    for(int attrIndex=0;attrIndex<numOfAttributes;attrIndex++)
+    {
+        // get the attribute catalog entry for the attribute from the attribute cache
+        // (use AttrCacheTable::getAttrCatEntry() with args relId and attrOffset)
+		AttrCatEntry attrCatEntryBuffer;
+		AttrCacheTable::getAttrCatEntry(relId,attrIndex,&attrCatEntryBuffer);
+		int rootBlock=attrCatEntryBuffer.rootBlock;
+
+        // get the root block field from the attribute catalog entry
+
+        // if index exists for the attribute(i.e. rootBlock != -1)
+		if(rootBlock!=-1)
+        {
+            /* insert the new record into the attribute's bplus tree using
+             BPlusTree::bPlusInsert()*/
+            int retVal = BPlusTree::bPlusInsert(relId, attrCatEntryBuffer.attrName,
+                                                record[attrIndex], rec_id);
+
+            if (retVal == E_DISKFULL) {
+                //(index for this attribute has been destroyed)
+				
+                 flag = E_INDEX_BLOCKS_RELEASED;
+            }
+        }
+	}
+	return flag;
+
 }
+
+
 
 /*
 NOTE: This function will copy the result of the search to the `record` argument.
       The caller should ensure that space is allocated for `record` array
       based on the number of attributes in the relation.
 */
-int BlockAccess::search(int relId, Attribute *record, char attrName[ATTR_SIZE], Attribute attrVal, int op) {
+int BlockAccess::search(int relId, Attribute *record, char attrName[ATTR_SIZE], Attribute attrVal, int op){
     // Declare a variable called recid to store the searched record
     RecId recId;
 	//*get the attribute cat entry using attrName
@@ -454,7 +486,7 @@ int BlockAccess::search(int relId, Attribute *record, char attrName[ATTR_SIZE], 
 
 }
 
-int BlockAccess::deleteRelation(char relName[ATTR_SIZE]) {
+int BlockAccess::deleteRelation(char relName[ATTR_SIZE]){
     // if the relation to delete is either Relation Catalog or Attribute Catalog
 	// (check if the relation names are either "RELATIONCAT" and "ATTRIBUTECAT".
 	// you may use the following constants: RELCAT_NAME and ATTRCAT_NAME)
@@ -612,6 +644,12 @@ int BlockAccess::deleteRelation(char relName[ATTR_SIZE]) {
 			RecId nextSearchIndex = {attrCatHeader.rblock, 0};
 			RelCacheTable::setSearchIndex(ATTRCAT_RELID, &nextSearchIndex);
         }
+		//! (the following part is only relevant once indexing has been implemented)
+        // if index exists for the attribute (rootBlock != -1), call bplus destroy
+        if (rootBlock != -1) {
+			BPlusTree::bPlusDestroy(rootBlock);
+            // delete the bplus tree rooted at rootBlock using BPlusTree::bPlusDestroy()
+        }
 
 	
 		if (numberOfAttributesDeleted == numAttributes) break;
@@ -672,7 +710,7 @@ NOTE: the caller is expected to allocate space for the argument `record` based
       on the size of the relation. This function will only copy the result of
       the projection onto the array pointed to by the argument.
 */
-int BlockAccess::project(int relId, Attribute *record) {
+int BlockAccess::project(int relId, Attribute *record){
     // get the previous search index of the relation relId from the relation
     // cache (use RelCacheTable::getSearchIndex() function)
 	RecId prevSearchIndex;
