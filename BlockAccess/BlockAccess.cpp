@@ -448,7 +448,10 @@ int BlockAccess::insert(int relId, Attribute *record) {
             }
         }
 	}
+	std::cout<<"inserted "<<relCatEntry.numRecs<<" into "<<relCatEntry.relName<<'\n';
+
 	return flag;
+
 
 }
 

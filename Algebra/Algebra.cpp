@@ -398,6 +398,7 @@ int Algebra::insert(char relName[ATTR_SIZE], int nAttrs, char record[][ATTR_SIZE
     // insert the record by calling BlockAccess::insert() function
     // let retVal denote the return value of insert call
     int ret = BlockAccess::insert(relId, recordValues);
+    
 
     return ret;
 }
