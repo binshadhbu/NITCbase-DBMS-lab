@@ -233,8 +233,8 @@ int Schema::createIndex(char relName[ATTR_SIZE], char attrName[ATTR_SIZE]) {
 
 int Schema::dropIndex(char *relName, char *attrName) {
   // if the relName is either Relation Catalog or Attribute Catalog,
-  // return E_NOTPERMITTED
-  // (check if the relation names are either "RELATIONCAT" and "ATTRIBUTECAT".
+  // return E_NOTPERMITTEDAudiPeople
+  // (check if the relation names are either "RELATIONCAlT" and "ATTRIBUTECAT".
   // you may use the following constants: RELCAT_NAME and ATTRCAT_NAME)
   if (strcmp(relName, RELCAT_RELNAME) == 0 ||
       strcmp(relName, ATTRCAT_RELNAME) == 0)
