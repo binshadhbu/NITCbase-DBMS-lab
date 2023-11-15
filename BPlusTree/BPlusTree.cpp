@@ -312,8 +312,7 @@ int BPlusTree::bPlusCreate(int relId, char attrName[ATTR_SIZE])
                 // (note that bPlusInsert will destroy any existing bplus tree if
                 // insert fails i.e when disk is full)
 
-                ret = bPlusInsert(relId, attrName, 
-                                    record[attrCatEntryBuffer.offset], recId);
+                ret = bPlusInsert(relId, attrName,record[attrCatEntryBuffer.offset], recId);
 
                 if (ret == E_DISKFULL) {
                     // (unable to get enough blocks to build the B+ Tree.)
@@ -351,12 +350,11 @@ int BPlusTree::bPlusInsert(int relId, char attrName[ATTR_SIZE],
 
     // find the leaf block to which insertion is to be done using the
     // findLeafToInsert() function
-
-    int leafBlkNum = findLeafToInsert(rootBlock, attrVal, attrCatEntryBuffer.attrType); // findLeafToInsert(root block num, attrVal, attribute type) 
-
+    //! return the lef block number to be inserted
+    int leafBlkNum = findLeafToInsert(rootBlock, attrVal, attrCatEntryBuffer.attrType); 
+    // findLeafToInsert(root block num, attrVal, attribute type) 
     // insert the attrVal and recId to the leaf block at blockNum using the
-    // insertIntoLeaf() function.
-
+    // insertIntoLeaf() function
     // declare a struct Index with attrVal = attrVal, block = recId.block and
     // slot = recId.slot to pass as argument to the function.
     // insertIntoLeaf(relId, attrName, leafBlkNum, Index entry)
@@ -515,7 +513,7 @@ int BPlusTree::insertIntoLeaf(int relId, char attrName[ATTR_SIZE], int leafBlock
     // in `indices` between two leaf blocks. We do this using the splitLeaf() function.
     // This function will return the blockNum of the newly allocated block or
     // E_DISKFULL if there are no more blocks to be allocated.
-
+    //!return block number newly allocated block to be splitted in  the right side
     int newRightBlk = splitLeaf(leafBlockNum, indices);
 
     // if splitLeaf() returned E_DISKFULL
@@ -525,8 +523,8 @@ int BPlusTree::insertIntoLeaf(int relId, char attrName[ATTR_SIZE], int leafBlock
     // if (/* the current leaf block was not the root */) // check pblock in header
     if (blockHeader.pblock != -1)
     {
-        //TODO: insert the middle value from `indices` into the parent block using the
-        //TODO: insertIntoInternal() function. (i.e the last value of the left block)
+        //! insert the middle value from `indices` into the parent block using the
+        //! insertIntoInternal() function. (i.e the last value of the left block)
 
         //* the middle value will be at index 31 (given by constant MIDDLE_INDEX_LEAF)
 
@@ -694,7 +692,7 @@ int BPlusTree::insertIntoInternal(int relId, char attrName[ATTR_SIZE],
     }
 
     // inserting the last remaining entry, if any
-    //// internalEntries[blockHeader.numEntries] = inserted ? lastEntry : intEntry;
+    //! internalEntries[blockHeader.numEntries] = inserted ? lastEntry : intEntry;
     if (insertedIndex == -1) {
         internalEntries[blockHeader.numEntries] = intEntry;
         insertedIndex = blockHeader.numEntries;
@@ -772,7 +770,7 @@ int BPlusTree::insertIntoInternal(int relId, char attrName[ATTR_SIZE],
 
         // insertIntoInternal(relId, attrName, parent of current block, new internal entry)
         return insertIntoInternal(relId, attrName, blockHeader.pblock, middleEntry);
-        // // if (ret == E_DISKFULL) return E_DISKFULL;
+        //  if (ret == E_DISKFULL) return E_DISKFULL;
     } 
     else 
     {

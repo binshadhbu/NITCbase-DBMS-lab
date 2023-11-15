@@ -225,11 +225,11 @@ int AttrCacheTable::setAttrCatEntry(int relId, char attrName[ATTR_SIZE], AttrCat
 {
 
     //  check that relId is valid and corresponds to an open relation
-    //! check if 0 <= relId < MAX_OPEN and return E_OUTOFBOUND otherwise
+    // check if 0 <= relId < MAX_OPEN and return E_OUTOFBOUND otherwise
     if (relId < 0 || relId >= MAX_OPEN)
         return E_OUTOFBOUND;
 
-    //! check if attrCache[relId] == nullptr and return E_RELNOTOPEN if true
+    // check if attrCache[relId] == nullptr and return E_RELNOTOPEN if true
     if (attrCache[relId] == nullptr)
         return E_RELNOTOPEN;
 
@@ -275,7 +275,7 @@ int AttrCacheTable::setAttrCatEntry(int relId, int attrOffset, AttrCatEntry *att
     {
         if (entry->attrCatEntry.offset == attrOffset)
         {
-            // TODO: copy entry->attrCatEntry to *attrCatBuf and return SUCCESS;
+            // copy entry->attrCatEntry to *attrCatBuf and return SUCCESS;
             strcpy(entry->attrCatEntry.relName, attrCatBuf->relName);
             strcpy(entry->attrCatEntry.attrName, attrCatBuf->attrName);
 

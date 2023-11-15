@@ -82,7 +82,7 @@ int Frontend::select_from_join_where(char relname_source_one[ATTR_SIZE], char re
                                      char relname_target[ATTR_SIZE],
                                      char join_attr_one[ATTR_SIZE], char join_attr_two[ATTR_SIZE]) {
   // Algebra::join
-  return SUCCESS;
+  return Algebra::join(relname_source_one,relname_source_two,relname_target,join_attr_one,join_attr_two);
 }
 
 int Frontend::select_attrlist_from_join_where(char relname_source_one[ATTR_SIZE], char relname_source_two[ATTR_SIZE],

@@ -1091,7 +1091,6 @@ int IndInternal::setEntry(void *ptr, int indexNum) {
 	// HEADER_SIZE + (indexNum * (sizeof(int) + ATTR_SIZE) ) from bufferPtr
     
 	unsigned char *entryPtr = bufferPtr + HEADER_SIZE + (indexNum * 20);
-
     memcpy(entryPtr, &(internalEntry->lChild), sizeof(int32_t));
     memcpy(entryPtr + 4, &(internalEntry->attrVal), sizeof(Attribute));
     memcpy(entryPtr + 20, &(internalEntry->rChild), 4);
