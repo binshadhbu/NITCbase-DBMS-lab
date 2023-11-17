@@ -3,11 +3,14 @@
 #include "Disk_Class/Disk.h"
 #include "FrontendInterface/FrontendInterface.h"
 
-int main(int argc, char *argv[]) {
-  /* Initialize the Run Copy of Disk */
-  Disk disk_run;
-  // StaticBuffer buffer;
-  // OpenRelTable cache;
+// local headers
+#include <iostream>
 
-  return FrontendInterface::handleFrontend(argc, argv);
+int main(int argc, char *argv[])
+{
+	Disk disk_run;
+	StaticBuffer bufferCache;
+	OpenRelTable cache;
+
+	return FrontendInterface::handleFrontend(argc, argv);
 }
