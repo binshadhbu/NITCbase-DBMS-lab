@@ -21,6 +21,15 @@ void printBuffer (int bufferIndex, unsigned char buffer[]) {
 	printf ("\n");
 }
 
+void printBlockAllocMap (unsigned char blockAllocMap[]) {
+	for (int i = 0; i < DISK_BLOCKS; i++)
+	{
+		if (i % 32 == 0) printf("\n");
+		printf("%u ", blockAllocMap[i]);
+	}
+	printf("\n");
+}
+
 StaticBuffer::StaticBuffer(){
 	for (int blockIndex = 0, blockAllocMapSlot = 0; blockIndex < 4; blockIndex++) {
 		unsigned char buffer [BLOCK_SIZE];
@@ -143,15 +152,13 @@ int StaticBuffer::setDirtyBit(int blockNum){
     return SUCCESS;
 }
 
-
 int StaticBuffer::getStaticBlockType(int blockNum){
     // Check if blockNum is valid (non zero and less than number of disk blocks)
     // and return E_OUTOFBOUND if not valid.
-	if(blockNum<0 or blockNum>=DISK_BLOCKS)
-	return E_OUTOFBOUND;
 
-	return (int)blockAllocMap[blockNum];
+	if (blockNum < 0 || blockNum >= DISK_BLOCKS) return E_OUTOFBOUND;
 
     // Access the entry in block allocation map corresponding to the blockNum argument
     // and return the block type after type casting to integer.
+	return (int)blockAllocMap[blockNum];
 }
