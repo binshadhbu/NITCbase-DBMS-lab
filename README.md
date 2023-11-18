@@ -113,4 +113,461 @@ int project(int relId, Attribute *record);
 This function is used to fetch **one** record of the relation. Each subsequent call would return the next record until there are no more records to be returned. It also updates `searchIndex` in the cache.
 
 # B+ Tree Layer
+## public functions
+### BPlusTree::bPlusCreate()
 
+```c
+int bPlusCreate(int relId, char attrName[ATTR_SIZE]);
+```
+
+This method creates a B+ Tree (Indexing) for the input attribute of the specified relation. It inserts the attribute value corresponding to attrName of all entries in the relation into the B+Tree using bPlusinsert()
+
+|**Name**|**Type**|**Description**|
+|---|---|---|
+|relId|`int`|Relation Id of the relation whose attribute a B+ tree is to be created for.|
+|attrName|`char[ATTR_SIZE]`|Attribute/column name for which B+ tree (index) is to be created.|
+
+
+### BPlusTree::bPlusSearch
+```cpp
+RecId bPlusSearch(int relId, char attrName[ATTR_SIZE], union Attribute attrVal, int op);
+```
+
+This method searches the relation specified using a B+ tree to find the next record that satisfies the specified condition. The condition value is given by the argument `attrVal`. This function returns the recId of the next record satisfying the condition. The condition that is checked for is the following.
+
+|**Name**|**Type**|**Description**|
+|---|---|---|
+|relId|`int`|Relation Id of the relation containing the attribute with index.|
+|attrName|`char[ATTR_SIZE]`|Attribute/column name (which has an index) to which condition need to be checked with.|
+|attrVal|`union Attribute`|value of attribute that has to be checked against the operater.|
+|op|`int`|Conditional Operator (can be one among `EQ` , `LE` , `LT` , `GE` , `GT` , `NE` corresponding to equal, less or than equal, less than ,greater than or equal, greater than, not equal operators respectively).|
+
+
+### BPlusTree::bPlusDestroy
+
+```c
+int bPlusDestroy(int rootBlockNum);
+```
+
+
+Used to delete a B+ Tree rooted at a particular block passed as input to the method. The method recursively deletes the constituent index blocks, both internal and leaf index blocks, until the full B+ Tree is deleted.
+
+This function is called when
+
+- the user issues the `DROP INDEX` command
+- in a situation where no further disk blocks can be allotted during the creation of/insertion to a B+ Tree
+- while deleting an entire relation in NITCbase.
+
+### BPlusTree::bPlusInsert
+
+```c
+int bPlusInsert(int relId, char attrName[ATTR_SIZE], union Attribute attrVal, RecId recordId);
+```
+
+Inserts an attribute value and the rec-id of the corresponding record into a B+ tree index on the disk
+
+## private functions
+### BPlusTree::findLeafToInsert
+
+```c
+int findLeafToInsert(int rootBlock, Attribute attrVal, int attrType);
+```
+
+Used to find the leaf index block to which an attribute would be inserted to in the B+ insertion process. If this leaf turns out to be full, the caller will need to handle the splitting of this block to insert the entry.
+
+According to the NITCbase specification, this function will only be called from 
+#### Arguments
+
+|**Name**|**Type**|**Description**|
+|---|---|---|
+|rootBlock|`int`|The root block of a B+ tree on the disk|
+|attrVal|`struct Attribute`|The attrVal for which the appropriate leaf node is to be found|
+|attrType|`int`|The type of the attribute `attrVal`, that is, [`NUMBER`/`STRING`](https://nitcbase.github.io/docs/constants)|
+
+#### Return values
+
+|**Value**|**Description**|
+|---|---|
+|leafBlkNum|The block number of the leaf block to which insertion can be done|
+
+
+
+### BPlusTree::insertIntoLeaf
+
+```c
+int insertIntoLeaf(int relId, char attrName[ATTR_SIZE], int blockNum, Index entry);
+```
+
+Used to insert an index entry into a leaf index block of an existing B+ tree. If the leaf is full and requires splitting, this function will call other B+ Tree Layer functions to handle any updation required to the parent internal index blocks of the B+ tree.
+
+According to the NITCbase specification, this function will only be called from
+
+|**Name**|**Type**|**Description**|
+|---|---|---|
+|rootBlock|`int`|The root block of a B+ tree on the disk|
+|attrVal|`struct Attribute`|The attrVal for which the appropriate leaf node is to be found|
+|attrType|`int`|The type of the attribute `attrVal`, that is, [`NUMBER`/`STRING`](https://nitcbase.github.io/docs/constants)|
+
+#### Return values
+
+|**Value**|**Description**|
+|---|---|
+|leafBlkNum|The block number of the leaf block to which insertion can be done|
+
+
+
+### BPlusTree::splitLeaf
+
+```c
+int splitLeaf(int leafBlockNum, Index indices[]);
+```
+
+Distributes an array of index entries between an existing leaf index block and a newly allocated leaf index block.
+#### Arguments
+
+|**Name**|**Type**|**Description**|
+|---|---|---|
+|leafBlockNum|`int`|The block number of the existing leaf index block that needs to be split|
+|indices|`struct Index[]`|Array of index entries that needs to be split among two leaf index blocks|
+
+#### Return values
+
+|**Value**|**Description**|
+|---|---|
+|`rightBlkNum`|The block number of the right block in the splitting, that is, the newly allocated block.|
+|[`E_DISKFULL`](https://nitcbase.github.io/docs/constants)|If disk space is not sufficient for splitting the leaf index block|
+
+### BPlusTree::insertIntoInternal
+```c
+int insertIntoLeaf(int relId, char attrName[ATTR_SIZE], int blockNum, Index entry);
+```
+
+Used to insert an index entry into an internal index block of an existing B+ tree. This function will call itself to handle any updation required to it's parent internal index blocks.
+
+|**Name**|**Type**|**Description**|
+|---|---|---|
+|relId|`int`|Relation Id of the relation containing the attribute|
+|attrName|`char[ATTR_SIZE]`|Attribute/column name of the relation with given rel-id to whose B+ tree (index) an entry is to be added|
+|intBlockNum|`int`|The block number of the internal index block to which insertion is to be done|
+|intEntry|`struct InternalEntry`|The index entry that is to be inserted into the internal index block|
+
+#### Return values
+
+|**Value**|**Description**|
+|---|---|
+|[`SUCCESS`](https://nitcbase.github.io/docs/constants)|On successful insertion into the internal index block|
+|[`E_DISKFULL`](https://nitcbase.github.io/docs/constants)|If disk space is not sufficient for insertion into the B+ tree|
+
+
+### BPlusTree::splitInternal
+
+```c
+int splitInternal(int intBlockNum, InternalEntry internalEntries[]);
+```
+
+Distributes an array of index entries between an existing internal index block and a newly allocated internal index block.
+
+|**Name**|**Type**|**Description**|
+|---|---|---|
+|intBlockNum|`int`|The block number of the existing internal index block that needs to be split|
+|internalEntries|`struct InternalEntry[]`|Array of index entries that needs to be split among two internal index blocks|
+
+#### Return values
+
+|**Value**|**Description**|
+|---|---|
+|`rightBlkNum`|The block number of the right block in the splitting, that is, the newly allocated block.|
+|[`E_DISKFULL`](https://nitcbase.github.io/docs/constants)|If disk space is not sufficient for splitting the internal index block|
+
+
+### BPlusTree::createNewRoot
+
+```c
+int createNewRoot(int relId, char attrName[ATTR_SIZE], Attribute attrVal, int lChild, int rChild);
+```
+
+Used to update the root of an existing B+ tree when the previous root block was split. This function will allocate a new root block and update the attribute cache entry of the attribute in the specified relation to point to the new root block.
+
+
+# class StaticBuffer
+
+```c
+struct BufferMetaInfo{
+bool free;
+bool dirty;
+int blockNum;
+int timeStamp;
+};
+```
+
+### StaticBuffer :: StaticBuffer()
+
+- `Constructor` of the `class StaticBuffer`
+- Copies `Block Allocation Map` from disk to buffer memory and updates the meta information of each buffer to initial empty conditions.
+- Should be called at the beginning of the session after the `Disk constructor`.
+
+### StaticBuffer :: ~StaticBuffer()
+
+#### Description
+
+- `Destructor` of the `class StaticBuffer`
+- Copies the `Block Allocation Map` and the dirty blocks from the buffer memory to disk.
+- Should be called at the end of the session before the `Disk destructor`.
+
+### StaticBuffer :: getStaticBlockType()
+
+```c
+int getStaticBlockType(int blockNum);
+```
+
+Returns the block type of the block corresponding to the input block number. This function is used to find the block type without the creation of a block object.
+
+### StaticBuffer :: setDirtyBit()
+
+```c
+int setDirtyBit(int blockNum);
+```
+
+Sets the `dirty bit` of the buffer corresponding to the block.
+
+### StaticBuffer :: getBufferNum() (private)
+```c
+int getBufferNum(int blockNum);
+```
+
+Returns the buffer number of the buffer to which the block with the given block number is loaded.
+
+### StaticBuffer :: getFreeBuffer()
+
+```c
+int getBufferNum(int blockNum);
+```
+
+Assigns a buffer to the block and returns the buffer number. If no free buffer block is found, the least recently used (`LRU`) buffer block is replaced.
+
+# class BlockBuffer
+
+```c
+struct HeadInfo
+{
+int32_t blockType;
+int32_t pblock;
+int32_t lblock;
+int32_t rblock;
+int32_t numEntries;
+int32_t numAttrs;
+int32_t numSlots;
+unsigned char reserved[4];
+};
+
+typedef union Attribute
+{
+double nVal;
+char sVal[ATTR_SIZE];
+} 
+
+struct InternalEntry
+{
+int32_t lChild;
+union Attribute attrVal;
+int32_t rChild;
+};
+
+struct Index{
+union Attribute attrVal;
+int32_t block;
+int32_t slot;
+unsigned char unused[8];
+};
+```
+
+### BlockBuffer :: BlockBuffer() (Constructor1)
+
+- One of the`Constructors` of the `class BlockBuffer`
+- Called if a new block of the input type is to be allocated in the disk.
+
+|**Name**|**Type**|**Description**|
+|---|---|---|
+|blockType|`char`|Type of the new block to be allotted. It can be one of the following: `'R'`,`'I'` or `'L'` where,  <br>`R`-`REC`  <br>`I`-`IND_INTERNAL`  <br>`L`-`IND_LEAF`|
+
+### BlockBuffer :: BlockBuffer() (Constructor2)
+
+#### Description
+
+- One of the`Constructors` of the `class BlockBuffer`
+- Called when the block has already been initialised as a record or index block on the disk.
+#### Arguments
+
+|**Name**|**Type**|**Description**|
+|---|---|---|
+|blockNum|`int`|Block number of the block whose object is to be created.|
+
+### BlockBuffer :: getBlockNum()
+
+Returns the block number of the block. Defined to access the private member field `blockNum` of the class.
+
+### BlockBuffer :: getHeader()
+
+```c
+int BlockBuffer::getHeader(struct HeadInfo *head)
+```
+
+### BlockBuffer :: setHeader()
+
+```c
+int BlockBuffer::setHeader(struct HeadInfo *head)
+```
+
+### BlockBuffer :: releaseBlock()
+
+The block number to which this instance of `BlockBuffer` is associated (given by the `blockNum` member field) is freed from the buffer and the disk. The `blockNum` field of the object is invalidated (set to `INVALID_BLOCK` (-1)).
+
+```c
+void BlockBuffer::releaseBlock()
+```
+
+### BlockBuffer :: loadBlockAndGetBufferPtr()
+
+Returns a pointer to the first byte of the buffer storing the block. This function will load the block to the buffer if it is not already present.
+
+```c
+int BlockBuffer::loadBlockAndGetBufferPtr(unsigned char ** buffPtr) 
+```
+
+|**Value**|**Description**|
+|---|---|
+|bufferPtr|Pointer to the buffer containing the block.|
+|[E_OUTOFBOUND]|If `blockNum` is not a valid disk block number.|
+
+### BlockBuffer :: getFreeBlock()
+
+Returns the block number of a free block. It sets up the header of the block with the input block type and updates the block allocation map with the same. A buffer is also allocated to the block. If a free block is not available, [E_DISKFULL](https://nitcbase.github.io/docs/constants) is returned.
+
+```c
+int BlockBuffer::getFreeBlock(int blockType)
+```
+
+
+### BlockBuffer :: setBlockType()
+
+Sets the type of the block with the input block type. This method sets the type in both the header of the block and also in the block allocation map.
+
+```c
+int BlockBuffer::setBlockType(int blockType)
+```
+
+
+|**Name**|**Type**|**Description**|
+|---|---|---|
+|blockType|`int`|Type of the block(`REC`/`IND_INTERNAL`/`IND_LEAF`)|
+
+
+
+# class RelCacheTable
+
+```c++
+typedef struct OpenRelTableMetaInfo{
+bool free;
+char relName[ATTR_SIZE];
+}
+```
+
+### RelCacheTable :: getRelCatEntry
+
+Gives the _Relation Catalog_ entry corresponding to the specified relation from _Relation Cache_ Table.
+
+|**ame**|**Type**|**Description**|
+|---|---|---|
+|relId|`int`|The relation id of the relation in the _Relation Cache_ Table|
+|relCatBuf|`RelCatEntry*`|Pointer to struct RelCatEntry to which the _Relation Catalog_ entry corresponding to input relId is to be copied|
+
+```c
+int RelCacheTable::getRelCatEntry(int relId, RelCatEntry *relCatBuf)
+```
+
+### RelCacheTable :: setRelCatEntry
+
+```c
+int RelCacheTable::setRelCatEntry(int relId, RelCatEntry *relCatBuf)
+```
+
+|**Name**|**Type**|**Description**|
+|---|---|---|
+|relId|`int`|The relation id of the relation in the _Relation Cache_ Table|
+|relCatBuf|`RelCatEntry*`|Pointer to struct RelCatEntry using which the _Relation Catalog_ entry corresponding to input relId is to be updated|
+
+### RelCacheTable :: getSearchIndex
+
+Gives the value of `searchIndex` field of the given relation from _Relation Cache_ Table. This is used by the linear search algorithm to find the **location of the previous hit** so that the search can be resumed from the next record.
+
+```c
+int relCacheTable::getSearchIndex(int relid, recId *recidbuff_ptr)
+```
+
+|**Name**|**Type**|**Description**|
+|---|---|---|
+|relId|`int`|The relation id of the relation in the _Relation Cache_ Table|
+|searchIndex|`RecId*`|Pointer to struct RecId to which the searchIndex field of the _Relation Cache_ entry corresponding to input relId is to be copied|
+
+### RelCacheTable :: setSearchIndex
+
+Sets the value of `searchIndex` field of the given relation in _Relation Cache_ Table. This is used by the linear search algorithm to set the location of the previous hit so that the search can be resumed from the next record.
+
+|**Name**|**Type**|**Description**|
+|---|---|---|
+|relId|`int`|The relation id of the relation in the _Relation Cache_ Table|
+|searchIndex|`RecId*`|Pointer to struct RecId using which the searchIndex field of the _Relation Cache_ entry corresponding to input relId is to be updated|
+
+```c
+int RelCacheTable::setSearchIndex(int relId, recId *searchIndex) 
+```
+
+
+### RelCacheTable :: resetSearchIndex
+
+Resets the value of `searchIndex` field of the given relation in _Relation Cache_ Table to {-1, -1}. This is used so that the linear search can be restarted from the first record.
+
+```c
+int RelCacheTable::resetSearchIndex(int relId)
+```
+
+### RelCacheTable :: recordToRelCatEntry
+A utility function that converts a record, implemented as an array of `union Attribute`, to `RelCatEntry` structure. This function can be used to convert a record in a _Relation Catalog_ block to the corresponding _Relation Cache_ entry when caching a relation in _Relation Cache_ Table. The details of the implementation are left to you.
+
+# Frontend
+
+
+```c
+static int create_table(char relname[ATTR_SIZE], int no_attrs, char attributes[][ATTR_SIZE], int type_attrs[]);
+
+static int drop_table(char relname[ATTR_SIZE]);
+
+static int open_table(char relname[ATTR_SIZE]);
+
+static int close_table(char relname[ATTR_SIZE]);
+
+static int create_index(char relname[ATTR_SIZE], char attrname[ATTR_SIZE]);
+
+static int drop_index(char relname[ATTR_SIZE], char attrname[ATTR_SIZE]);
+
+static int alter_table_rename(char relname_from[ATTR_SIZE], char relname_to[ATTR_SIZE]);
+
+static int alter_table_rename_column(char relname[ATTR_SIZE], char attrname_from[16], char attrname_to[16]);
+
+static int insert_into_table_values(char relname[ATTR_SIZE], int attr_count, char attr_values[][ATTR_SIZE]);
+
+static int select_from_table(char relname_source[ATTR_SIZE], char relname_target[ATTR_SIZE]);
+
+static int select_attrlist_from_table(char relname_source[ATTR_SIZE], char relname_target[ATTR_SIZE],int attr_count, char attr_list[][ATTR_SIZE]);
+
+static int select_from_table_where(char relname_source[ATTR_SIZE], char relname_target[ATTR_SIZE],char attribute[ATTR_SIZE], int op, char value[ATTR_SIZE]);
+
+static int select_attrlist_from_table_where(char relname_source[ATTR_SIZE], char relname_target[ATTR_SIZE],int attr_count, char attr_list[][ATTR_SIZE],char attribute[ATTR_SIZE], int op, char value[ATTR_SIZE]);
+
+static int select_from_join_where(char relname_source_one[ATTR_SIZE], char relname_source_two[ATTR_SIZE],char relname_target[ATTR_SIZE],char join_attr_one[ATTR_SIZE], char join_attr_two[ATTR_SIZE]);
+
+static int select_attrlist_from_join_where(char relname_source_one[ATTR_SIZE],char relname_source_two[ATTR_SIZE],
+char relname_target[ATTR_SIZE],char join_attr_one[ATTR_SIZE], char join_attr_two[ATTR_SIZE],int attr_count, char attr_list[][ATTR_SIZE]);
+
+static int custom_function(int argc, char argv[][ATTR_SIZE]);
+```
