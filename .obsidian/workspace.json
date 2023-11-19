@@ -4,11 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "cf27572942edd132",
+        "id": "015c3e328205d28a",
         "type": "tabs",
         "children": [
           {
-            "id": "09e159a50719bbd8",
+            "id": "672ea41b9307ff46",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -65,13 +65,11 @@
               "state": {}
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
-    "width": 200,
-    "collapsed": true
+    "width": 200
   },
   "right": {
     "id": "4dd3ed759ae1d48d",
@@ -148,15 +146,24 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "09e159a50719bbd8",
+  "active": "672ea41b9307ff46",
   "lastOpenFiles": [
+    "README.md",
+    "docs/constants.md",
+    "Algebra Layer.md",
+    "DesignDiagram.md",
+    "Untitled 1.canvas",
+    "Block Access Layer.md",
+    "Untitled.canvas",
+    "docs",
+    "Untitled 1.md",
+    "Untitled.md",
     "define/id.h",
     "define/constants.h",
     "define",
     "Cache/define/id.h",
     "Cache/define/constants.h",
     "Cache/define",
-    "README.md",
     "Algebra layer.md"
   ]
 }
