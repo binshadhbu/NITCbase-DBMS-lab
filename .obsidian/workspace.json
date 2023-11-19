@@ -150,6 +150,12 @@
   },
   "active": "09e159a50719bbd8",
   "lastOpenFiles": [
+    "define/id.h",
+    "define/constants.h",
+    "define",
+    "Cache/define/id.h",
+    "Cache/define/constants.h",
+    "Cache/define",
     "README.md",
     "Algebra layer.md"
   ]

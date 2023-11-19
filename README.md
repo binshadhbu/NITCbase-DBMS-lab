@@ -534,6 +534,43 @@ int RelCacheTable::resetSearchIndex(int relId)
 ### RelCacheTable :: recordToRelCatEntry
 A utility function that converts a record, implemented as an array of `union Attribute`, to `RelCatEntry` structure. This function can be used to convert a record in a _Relation Catalog_ block to the corresponding _Relation Cache_ entry when caching a relation in _Relation Cache_ Table. The details of the implementation are left to you.
 
+
+# class AttrCacheTable
+```c
+
+static int getAttrCatEntry(int relId, char attrName[ATTR_SIZE], AttrCatEntry *attrCatBuf);
+
+static int getAttrCatEntry(int relId, int attrOffset, AttrCatEntry *attrCatBuf);
+
+static int setAttrCatEntry(int relId, char attrName[ATTR_SIZE], AttrCatEntry *attrCatBuf);
+
+static int setAttrCatEntry(int relId, int attrOffset, AttrCatEntry *attrCatBuf);
+
+static int getSearchIndex(int relId, char attrName[ATTR_SIZE], IndexId *searchIndex);
+
+static int getSearchIndex(int relId, int attrOffset, IndexId *searchIndex);
+
+static int setSearchIndex(int relId, char attrName[ATTR_SIZE], IndexId *searchIndex);
+
+static int setSearchIndex(int relId, int attrOffset, IndexId *searchIndex);
+
+static int resetSearchIndex(int relId, char attrName[ATTR_SIZE]);
+
+static int resetSearchIndex(int relId, int attrOffset);
+
+static int getAttributeOffset (int relId, char attrName [ATTR_SIZE]);
+```
+
+
+# class OpenRelTable
+
+```c
+struct OpenRelTableMetaInfo{
+bool free;
+char relName[ATTR_SIZE];
+}
+```
+
 # Frontend
 
 
@@ -570,4 +607,57 @@ static int select_attrlist_from_join_where(char relname_source_one[ATTR_SIZE],ch
 char relname_target[ATTR_SIZE],char join_attr_one[ATTR_SIZE], char join_attr_two[ATTR_SIZE],int attr_count, char attr_list[][ATTR_SIZE]);
 
 static int custom_function(int argc, char argv[][ATTR_SIZE]);
+```
+
+# Schema Layer
+
+### Schema :: createRel()
+This method creates a new relation with the name, attribute/column list as specified in arguments. Verifying the maximum number of attributes in a relation is to be checked by the caller of this function (Frontend Interface) and is not handled by this function.
+
+```c
+int createRel(char relName[], int numOfAttributes, char attrNames[][ATTR_SIZE], int attrType[]);
+```
+
+### Schema :: deleteRel()
+
+This method deletes the relation with name as specified in arguments.
+```c
+int deleteRel(char relName[ATTR_SIZE]);
+```
+
+### Schema :: createIndex()
+This method creates a bplus indexing on an attribute attrName in a relation relName as specified in arguments.
+
+```c
+int createIndex(char relName[ATTR_SIZE], char attrName[ATTR_SIZE]);
+```
+### Schema :: dropIndex()
+
+```c
+int dropIndex(char relName[ATTR_SIZE], char attrName[ATTR_SIZE]);
+```
+This method drops the bplus indexing on an attribute attrName in a relation relName as specified in arguments.
+
+### Schema :: renameRel()
+
+```c
+int renameRel(char oldRelName[ATTR_SIZE], char newRelName[ATTR_SIZE]);
+```
+
+### Schema :: renameAttr()
+This method changes the name of an attribute/column present in a specified relation, to new name as specified in arguments.
+
+```c
+int renameAttr(char relName[ATTR_SIZE], char oldAttrName[ATTR_SIZE], char newAttrName[ATTR_SIZE]);
+```
+### Schema :: openRel()
+
+```c
+int openRel(char relName[ATTR_SIZE]);
+```
+
+### Schema :: closeRel()
+
+```c
+int closeRel(char relName[ATTR_SIZE]);
 ```
