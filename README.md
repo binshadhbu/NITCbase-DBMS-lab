@@ -127,6 +127,12 @@ This method creates a B+ Tree (Indexing) for the input attribute of the specifie
 |relId|`int`|Relation Id of the relation whose attribute a B+ tree is to be created for.|
 |attrName|`char[ATTR_SIZE]`|Attribute/column name for which B+ tree (index) is to be created.|
 
+- check name of operation permitted or not
+- **get a leafBlock** using constructor 1 `IndLeaf`
+- Traverse all the blocks in the relation and insert them one by one into the B+ Tree
+- declare **RecBuffer ** using constructor 2
+- insert records one by one using `bPlusInsert(relId, attrName,
+`record[attrCatEntryBuffer.offset], recId);`
 
 ### BPlusTree::bPlusSearch
 ```cpp
@@ -166,6 +172,11 @@ int bPlusInsert(int relId, char attrName[ATTR_SIZE], union Attribute attrVal, Re
 
 Inserts an attribute value and the rec-id of the corresponding record into a B+ tree index on the disk
 
+- get rootBlock using `AttrCacheTable::getAttrCatEntry(relId, attrName, &attrCatEntryBuffer);`
+- find leafBlock number to be inserted using `findLeafToInsert(rootBlock, attrVal, attrCatEntryBuffer.attrType);`
+- declare `Index` and set values to be inserted 
+- call `insertIntoLeaf(relId, attrName, leafBlkNum, indexEntry)`
+- if it fails delete the indexing from rootBlock
 ## private functions
 ### BPlusTree::findLeafToInsert
 
@@ -190,6 +201,8 @@ According to the NITCbase specification, this function will only be called from
 |---|---|
 |leafBlkNum|The block number of the leaf block to which insertion can be done|
 
+- get rootBlock number 
+- iterate through each level using `compareAttrs` if its internal block check using `StaticBuffer::getStaticBlockType(blockNum)`
 
 
 ### BPlusTree::insertIntoLeaf
@@ -214,7 +227,16 @@ According to the NITCbase specification, this function will only be called from
 |---|---|
 |leafBlkNum|The block number of the leaf block to which insertion can be done|
 
-
+- declare IndLeaf `leafBlock (leafBlockNum);`
+- declare `Index indices[blockHeader.numEntries + 1];`
+- find the correct index for to be inserted  and insert there
+- or insert in the end
+- if number of entries is less than 63 increase the number of entries and set entry then return sucess
+- or call `newRightBlk = splitLeaf(leafBlockNum, indices);`
+- if current block has root Block `InternalEntry middleEntry;`
+- middleEntry's lchild will be leafBlock  rchild will be` newRightBlk` call `insertIntoInternal(relId, attrName, blockHeader.pblock, middleEntry);`
+- if the current block is the rootBlock then make a newRoot using ` createNewRoot(relId, attrName, indices[MIDDLE_INDEX_LEAF].attrVal,leafBlockNum, newRightBlk)`
+- return sucess
 
 ### BPlusTree::splitLeaf
 
@@ -237,6 +259,10 @@ Distributes an array of index entries between an existing leaf index block and a
 |`rightBlkNum`|The block number of the right block in the splitting, that is, the newly allocated block.|
 |[`E_DISKFULL`](https://nitcbase.github.io/docs/constants)|If disk space is not sufficient for splitting the leaf index block|
 
+- declare `IndLeaf rightBlock;` and `IndLeaf leftBlock(leafBlockNum);`
+- set values for `rightBlock` including numEntries `(MAX_KEYS_LEAF+1)/2`
+- distribute data in the indices to `leftBlock` and `rightBlock`
+- return `rightBlockNum`
 ### BPlusTree::insertIntoInternal
 ```c
 int insertIntoLeaf(int relId, char attrName[ATTR_SIZE], int blockNum, Index entry);
@@ -251,6 +277,7 @@ Used to insert an index entry into an internal index block of an existing B+ tre
 |intBlockNum|`int`|The block number of the internal index block to which insertion is to be done|
 |intEntry|`struct InternalEntry`|The index entry that is to be inserted into the internal index block|
 
+
 #### Return values
 
 |**Value**|**Description**|
@@ -258,7 +285,14 @@ Used to insert an index entry into an internal index block of an existing B+ tre
 |[`SUCCESS`](https://nitcbase.github.io/docs/constants)|On successful insertion into the internal index block|
 |[`E_DISKFULL`](https://nitcbase.github.io/docs/constants)|If disk space is not sufficient for insertion into the B+ tree|
 
-
+- declare `IndInternal internalBlock (intBlockNum);`
+- declare `InternalEntry internalEntries[blockHeader.numEntries + 1];`
+- find the index and insert using `compareAttrs`
+- set `lchild` and `rchild` with appropriate values if all are ok then return success
+- or call `newRightBlk = splitInternal(intBlockNum, internalEntries);`
+- if current block have parent block get middleEntry and call `insertIntoInternal(relId, attrName, blockHeader.pblock, middleEntry);` in  `InternalEntry middleEntry;`
+- else call `createNewRoot(relId,attrName,internalEntries[MIDDLE_INDEX_INTERNAL].attrVal,intBlockNum, newRightBlk);`
+- return success
 ### BPlusTree::splitInternal
 
 ```c
@@ -279,7 +313,10 @@ Distributes an array of index entries between an existing internal index block a
 |`rightBlkNum`|The block number of the right block in the splitting, that is, the newly allocated block.|
 |[`E_DISKFULL`](https://nitcbase.github.io/docs/constants)|If disk space is not sufficient for splitting the internal index block|
 
-
+- declare `IndInternal rightBlock;` and `IndInternal leftBlock (intBlockNum);`
+- add half of the values from `interalEntris ` to both `rightBlock` and `leftBlock`
+- for each child of newBlock set their parent is `rightBlock`
+- return `rightBlock`
 ### BPlusTree::createNewRoot
 
 ```c
@@ -288,6 +325,20 @@ int createNewRoot(int relId, char attrName[ATTR_SIZE], Attribute attrVal, int lC
 
 Used to update the root of an existing B+ tree when the previous root block was split. This function will allocate a new root block and update the attribute cache entry of the attribute in the specified relation to point to the new root block.
 
+- declare `IndInternal newRootBlock;`
+- declare `InternalEntry internalentry;` and set `lchild` and `rightchild` and `attrVal`
+- return success
+### BPlusTree::bPlusDestroy
+Used to delete a B+ Tree rooted at a particular block passed as input to the method. The method recursively deletes the constituent index blocks, both internal and leaf index blocks, until the full B+ Tree is deleted.
+- the user issues the `DROP INDEX` command
+- in a situation where no further disk blocks can be allotted during the creation of/insertion to a B+ Tree
+- while deleting an entire relation in NITCbase.
+```c
+int BPlusTree::bPlusDestroy(int rootBlockNum)
+```
+- if current Block is leafBlock declare` IndLeaf leafBlock (rootBlockNum); ` and call `leafBlock.releaseBlock();`
+- else declare `IndInternal internalBlock (rootBlockNum);` iterate through all the entries and call `BPlusTree::bPlusDestroy(blockEntry.rChild);`
+- return success after `internalBlock.releaseBlock();`
 
 # class StaticBuffer
 
@@ -631,12 +682,19 @@ This method creates a bplus indexing on an attribute attrName in a relation relN
 ```c
 int createIndex(char relName[ATTR_SIZE], char attrName[ATTR_SIZE]);
 ```
+
+1. compare relName with attribute catalog and relation catalog and make sure relation is open call  `BPlusTree::bPlusCreate(relId, attrName);`
 ### Schema :: dropIndex()
 
 ```c
 int dropIndex(char relName[ATTR_SIZE], char attrName[ATTR_SIZE]);
 ```
 This method drops the bplus indexing on an attribute attrName in a relation relName as specified in arguments.
+
+1. compare relName with attribute catalog and relation catalog and make sure relation is open call  
+2. check if index is there or not
+3. call destroy function
+4. set root block =-1
 
 ### Schema :: renameRel()
 
